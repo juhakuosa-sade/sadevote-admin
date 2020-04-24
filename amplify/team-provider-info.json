@@ -1,0 +1,26 @@
+{
+    "test": {
+        "awscloudformation": {
+            "AuthRoleName": "amplify-sadevote-admin-test-20642-authRole",
+            "UnauthRoleArn": "arn:aws:iam::508014774151:role/amplify-sadevote-admin-test-20642-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::508014774151:role/amplify-sadevote-admin-test-20642-authRole",
+            "Region": "eu-west-1",
+            "DeploymentBucketName": "amplify-sadevote-admin-test-20642-deployment",
+            "UnauthRoleName": "amplify-sadevote-admin-test-20642-unauthRole",
+            "StackName": "amplify-sadevote-admin-test-20642",
+            "StackId": "arn:aws:cloudformation:eu-west-1:508014774151:stack/amplify-sadevote-admin-test-20642/1a360a40-85b7-11ea-b001-0adcb29bafe2",
+            "AmplifyAppId": "d1tayxyld1s26i"
+        },
+        "categories": {
+            "hosting": {
+                "amplifyhosting": {
+                    "appId": "d1tayxyld1s26i",
+                    "type": "manual"
+                }
+            },
+            "auth": {
+                "sadevoteadmina21d98fd": {}
+            }
+        }
+    }
+}
