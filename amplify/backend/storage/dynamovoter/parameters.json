@@ -1,0 +1,7 @@
+{
+    "tableName": "dynamovoter",
+    "partitionKeyName": "email",
+    "partitionKeyType": "S",
+    "sortKeyName": "lastname",
+    "sortKeyType": "S"
+}

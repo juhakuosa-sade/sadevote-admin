@@ -1,0 +1,29 @@
+type Todo @model {
+  id: ID!
+  name: String!
+  description: String
+}
+type User @model {
+  id: ID!
+  email: String!
+  firstname: String!
+  lastname: String!
+  shares: Int!
+  present: Boolean
+}
+type Topic @model {
+  id: ID!
+  topic_number: Int
+  topic_title: String
+  topic_text: String
+  voting_options: [VotingOption]
+  active: Boolean
+  voting_percentage: Float
+}
+type VotingOption @model {
+  id: ID!
+  topic_number: Int
+  vote_text: String
+  votes: Int!
+  unanimously_selected: Boolean
+}

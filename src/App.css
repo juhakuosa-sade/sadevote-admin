@@ -15,8 +15,11 @@
 .App-body {
   background-color: #282c34;
   min-height: 100vh;
-  padding: 20px;
+  padding: 0px;
   color: white;
+  display: flex;
+  columns: auto;
+  flex-direction: row;
 }
 
 .App-button {
