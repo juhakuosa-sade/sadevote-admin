@@ -72,12 +72,15 @@ export const onCreateTopic = /* GraphQL */ `
       topic_title
       topic_text
       voting_options {
-        id
+        topic_id
         topic_number
-        vote_text
+        id
+        option_number
+        option_text
         votes
         unanimously_selected
       }
+      voting_options_count
       active
       voting_percentage
     }
@@ -91,12 +94,15 @@ export const onUpdateTopic = /* GraphQL */ `
       topic_title
       topic_text
       voting_options {
-        id
+        topic_id
         topic_number
-        vote_text
+        id
+        option_number
+        option_text
         votes
         unanimously_selected
       }
+      voting_options_count
       active
       voting_percentage
     }
@@ -110,12 +116,15 @@ export const onDeleteTopic = /* GraphQL */ `
       topic_title
       topic_text
       voting_options {
-        id
+        topic_id
         topic_number
-        vote_text
+        id
+        option_number
+        option_text
         votes
         unanimously_selected
       }
+      voting_options_count
       active
       voting_percentage
     }
@@ -124,9 +133,11 @@ export const onDeleteTopic = /* GraphQL */ `
 export const onCreateVotingOption = /* GraphQL */ `
   subscription OnCreateVotingOption {
     onCreateVotingOption {
-      id
+      topic_id
       topic_number
-      vote_text
+      id
+      option_number
+      option_text
       votes
       unanimously_selected
     }
@@ -135,9 +146,11 @@ export const onCreateVotingOption = /* GraphQL */ `
 export const onUpdateVotingOption = /* GraphQL */ `
   subscription OnUpdateVotingOption {
     onUpdateVotingOption {
-      id
+      topic_id
       topic_number
-      vote_text
+      id
+      option_number
+      option_text
       votes
       unanimously_selected
     }
@@ -146,9 +159,11 @@ export const onUpdateVotingOption = /* GraphQL */ `
 export const onDeleteVotingOption = /* GraphQL */ `
   subscription OnDeleteVotingOption {
     onDeleteVotingOption {
-      id
+      topic_id
       topic_number
-      vote_text
+      id
+      option_number
+      option_text
       votes
       unanimously_selected
     }

@@ -65,12 +65,15 @@ export const getTopic = /* GraphQL */ `
       topic_title
       topic_text
       voting_options {
-        id
+        topic_id
         topic_number
-        vote_text
+        id
+        option_number
+        option_text
         votes
         unanimously_selected
       }
+      voting_options_count
       active
       voting_percentage
     }
@@ -89,12 +92,15 @@ export const listTopics = /* GraphQL */ `
         topic_title
         topic_text
         voting_options {
-          id
+          topic_id
           topic_number
-          vote_text
+          id
+          option_number
+          option_text
           votes
           unanimously_selected
         }
+        voting_options_count
         active
         voting_percentage
       }
@@ -105,9 +111,11 @@ export const listTopics = /* GraphQL */ `
 export const getVotingOption = /* GraphQL */ `
   query GetVotingOption($id: ID!) {
     getVotingOption(id: $id) {
-      id
+      topic_id
       topic_number
-      vote_text
+      id
+      option_number
+      option_text
       votes
       unanimously_selected
     }
@@ -121,9 +129,11 @@ export const listVotingOptions = /* GraphQL */ `
   ) {
     listVotingOptions(filter: $filter, limit: $limit, nextToken: $nextToken) {
       items {
-        id
+        topic_id
         topic_number
-        vote_text
+        id
+        option_number
+        option_text
         votes
         unanimously_selected
       }

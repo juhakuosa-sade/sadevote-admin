@@ -5,7 +5,7 @@ import { listUsers } from '../graphql/queries'
 import '../App.css';
 
 const userInitialState = {
-    ID: '',
+    id: '',
     email: '',
     firstname: '',
     lastname: '',
@@ -16,6 +16,7 @@ const userInitialState = {
 const UsersData = () => {
     const [formState, setFormState] = useState(userInitialState)
     const [users, setUsers] = useState([])
+    formState.shares = '';
 
     useEffect(() => {
         fetchUsers()
@@ -35,15 +36,17 @@ const UsersData = () => {
 
     async function addUser() {
         try {
-            if (!formState.ID || !formState.email) {
-                console.log('error creating user: ID = ',formState.ID);
+            if (!formState.id || !formState.email) {
+                console.log('error creating user: ID = ',formState.id);
                 console.log('error creating user: email = ',formState.email);
                 return
             }
             const user = { ...formState }
+            if ((user.shares<0) || (user.shares===null) || (user.shares==='')) user.shares = 0;
             console.log('creating user:', user)
             setUsers([...users, user])
             setFormState(userInitialState)
+            formState.shares='';
             await API.graphql(graphqlOperation(createUser, {input: user}))
         } catch (err) {
             console.log('error creating user:', err)
@@ -54,9 +57,9 @@ const UsersData = () => {
         <div style={styles.container}>
             <h3>Users</h3>
             <input
-                onChange={event => setInput('ID', event.target.value)}
+                onChange={event => setInput('id', event.target.value)}
                 style={styles.input}
-                value={formState.ID}
+                value={formState.id}
                 placeholder="ID"
             />
             <input
@@ -83,17 +86,11 @@ const UsersData = () => {
                 value={formState.shares}
                 placeholder="Shares"
             />
-            <input
-                onChange={event => setInput('present', event.target.value)}
-                style={styles.input}
-                value={formState.present}
-                placeholder="Present"
-            />
             <button style={styles.button} onClick={addUser}>Create User</button>
             {
                 users.map((user, index) => (
                     <div key={user.id ? user.id : index} style={styles.user}>
-                        <p style={styles.userName}>{user.firstname} {user.lastname}</p>
+                        <p style={styles.userName}>{user.id} {user.firstname} {user.lastname}</p>
                         <p style={styles.userDescription}>{user.email}</p>
                         <p style={styles.userDescription}>{user.shares} shares </p>
                     </div>
@@ -104,7 +101,7 @@ const UsersData = () => {
 }
 
 const styles = {
-    container: { width: 400, margin: '0 auto', display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', padding: 20 },
+    container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 5 },
     user: {  fontSize: 12, marginBottom: 15 },
     input: { border: 'none', backgroundColor: '#ddd', marginBottom: 10, padding: 8, fontSize: 12 },
     userName: { fontSize: 12, fontWeight: 'bold' },

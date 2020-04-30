@@ -10,10 +10,12 @@ import '@aws-amplify/ui/dist/style.css';
 
 import Home from "./pages/Home";
 import UsersData from "./pages/UsersData";
+import TopicsData from "./pages/TopicsData";
 import TodoData from "./pages/TodoData";
 
 const pageHome='/';
 const pageUsers='/users'
+const pageTopics='/topics'
 const pageTodos='/todos';
 
 
@@ -35,8 +37,9 @@ class App extends Component {
         }
 
         this.goHome = this.goHome.bind(this);
-        this.goTodos = this.goTodos.bind(this);
         this.goUsers = this.goUsers.bind(this);
+        this.goTopics = this.goTopics.bind(this);
+        this.goTodos = this.goTodos.bind(this);
         this.goPage = this.goPage.bind(this);
     }
 
@@ -55,6 +58,10 @@ class App extends Component {
         this.goPage(pageUsers)
     }
 
+    goTopics() {
+        this.goPage(pageTopics)
+    }
+
     goTodos() {
         this.goPage(pageTodos)
     }
@@ -68,37 +75,32 @@ class App extends Component {
                         <img src={logo} className="App-logo" alt="logo"/>
                     </a>
                 </header>
-
                 <div className="App-body">
-
                     <div style={styles.navcontainer}>
-                        <button style={styles.button} onClick={() => signOut()}>Sign out</button>
-                        <hr/>
                         <button style={styles.button} onClick={this.goHome}>Home</button>
+                        <hr/>
+                        <button style={styles.button} onClick={this.goUsers}>Users</button>
+                        <button style={styles.button} onClick={this.goTopics}>Topics</button>
                         <button style={styles.button} onClick={this.goTodos}>Todos</button>
-                        <button style={styles.button} onClick={this.goUsers}>Users</button>  <p/>
+                        <hr/>
+                        <button style={styles.button} onClick={() => signOut()}>Sign out</button>  
+                        <p/>
                     </div>  
                     <div style={styles.container}>
-                        
                         <BrowserRouter>
                             <div>
-                                
                                 <Redirect to= {this.state.toPage} />
-
                                 <Switch>
                                     <Route exact path={pageHome} component={Home} />
                                     <Route path={pageUsers} component={UsersData} />
+                                    <Route path={pageTopics} component={TopicsData} />
                                     <Route path={pageTodos} component={TodoData} />
                                 </Switch>
                             </div>
                         </BrowserRouter>
-
                         <p/>
-
                     </div>
-
                 </div>
-
 
             </div>
         );
@@ -108,7 +110,8 @@ class App extends Component {
 
 const styles = {
     navcontainer: { backgroundColor: 'grey', width: 100, margin: '0 0', display: 'flex', flexDirection: 'column', justifyContent: 'left', padding: 5 },
-    container: { width: 500, margin: '0 auto', display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', padding: 20 },
+    container: { width: 500, margin: '0 auto', justifyContent: 'center', padding: 10 },
+ //   container: { width: 500, margin: '0 auto', display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', padding: 20 },
     button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '8px 0px' }
 }
 

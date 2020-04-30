@@ -1289,6 +1289,17 @@
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
+          "name" : "voting_options_count",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "Int",
+            "ofType" : null
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
           "name" : "active",
           "description" : null,
           "args" : [ ],
@@ -1320,7 +1331,7 @@
         "name" : "VotingOption",
         "description" : null,
         "fields" : [ {
-          "name" : "id",
+          "name" : "topic_id",
           "description" : null,
           "args" : [ ],
           "type" : {
@@ -1346,7 +1357,33 @@
           "isDeprecated" : false,
           "deprecationReason" : null
         }, {
-          "name" : "vote_text",
+          "name" : "id",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "ID",
+              "ofType" : null
+            }
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "option_number",
+          "description" : null,
+          "args" : [ ],
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "Int",
+            "ofType" : null
+          },
+          "isDeprecated" : false,
+          "deprecationReason" : null
+        }, {
+          "name" : "option_text",
           "description" : null,
           "args" : [ ],
           "type" : {
@@ -1469,6 +1506,15 @@
           "type" : {
             "kind" : "INPUT_OBJECT",
             "name" : "ModelStringInput",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
+          "name" : "voting_options_count",
+          "description" : null,
+          "type" : {
+            "kind" : "INPUT_OBJECT",
+            "name" : "ModelIntInput",
             "ofType" : null
           },
           "defaultValue" : null
@@ -1664,7 +1710,7 @@
         "description" : null,
         "fields" : null,
         "inputFields" : [ {
-          "name" : "id",
+          "name" : "topic_id",
           "description" : null,
           "type" : {
             "kind" : "INPUT_OBJECT",
@@ -1682,7 +1728,25 @@
           },
           "defaultValue" : null
         }, {
-          "name" : "vote_text",
+          "name" : "id",
+          "description" : null,
+          "type" : {
+            "kind" : "INPUT_OBJECT",
+            "name" : "ModelIDInput",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
+          "name" : "option_number",
+          "description" : null,
+          "type" : {
+            "kind" : "INPUT_OBJECT",
+            "name" : "ModelIntInput",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
+          "name" : "option_text",
           "description" : null,
           "type" : {
             "kind" : "INPUT_OBJECT",
@@ -2607,6 +2671,15 @@
           },
           "defaultValue" : null
         }, {
+          "name" : "voting_options_count",
+          "description" : null,
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "Int",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
           "name" : "active",
           "description" : null,
           "type" : {
@@ -2657,6 +2730,15 @@
           "type" : {
             "kind" : "INPUT_OBJECT",
             "name" : "ModelStringInput",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
+          "name" : "voting_options_count",
+          "description" : null,
+          "type" : {
+            "kind" : "INPUT_OBJECT",
+            "name" : "ModelIntInput",
             "ofType" : null
           },
           "defaultValue" : null
@@ -2763,6 +2845,15 @@
           },
           "defaultValue" : null
         }, {
+          "name" : "voting_options_count",
+          "description" : null,
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "Int",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
           "name" : "active",
           "description" : null,
           "type" : {
@@ -2808,12 +2899,16 @@
         "description" : null,
         "fields" : null,
         "inputFields" : [ {
-          "name" : "id",
+          "name" : "topic_id",
           "description" : null,
           "type" : {
-            "kind" : "SCALAR",
-            "name" : "ID",
-            "ofType" : null
+            "kind" : "NON_NULL",
+            "name" : null,
+            "ofType" : {
+              "kind" : "SCALAR",
+              "name" : "ID",
+              "ofType" : null
+            }
           },
           "defaultValue" : null
         }, {
@@ -2826,7 +2921,25 @@
           },
           "defaultValue" : null
         }, {
-          "name" : "vote_text",
+          "name" : "id",
+          "description" : null,
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "ID",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
+          "name" : "option_number",
+          "description" : null,
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "Int",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
+          "name" : "option_text",
           "description" : null,
           "type" : {
             "kind" : "SCALAR",
@@ -2866,6 +2979,15 @@
         "description" : null,
         "fields" : null,
         "inputFields" : [ {
+          "name" : "topic_id",
+          "description" : null,
+          "type" : {
+            "kind" : "INPUT_OBJECT",
+            "name" : "ModelIDInput",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
           "name" : "topic_number",
           "description" : null,
           "type" : {
@@ -2875,7 +2997,16 @@
           },
           "defaultValue" : null
         }, {
-          "name" : "vote_text",
+          "name" : "option_number",
+          "description" : null,
+          "type" : {
+            "kind" : "INPUT_OBJECT",
+            "name" : "ModelIntInput",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
+          "name" : "option_text",
           "description" : null,
           "type" : {
             "kind" : "INPUT_OBJECT",
@@ -2946,6 +3077,24 @@
         "description" : null,
         "fields" : null,
         "inputFields" : [ {
+          "name" : "topic_id",
+          "description" : null,
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "ID",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
+          "name" : "topic_number",
+          "description" : null,
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "Int",
+            "ofType" : null
+          },
+          "defaultValue" : null
+        }, {
           "name" : "id",
           "description" : null,
           "type" : {
@@ -2959,7 +3108,7 @@
           },
           "defaultValue" : null
         }, {
-          "name" : "topic_number",
+          "name" : "option_number",
           "description" : null,
           "type" : {
             "kind" : "SCALAR",
@@ -2968,7 +3117,7 @@
           },
           "defaultValue" : null
         }, {
-          "name" : "vote_text",
+          "name" : "option_text",
           "description" : null,
           "type" : {
             "kind" : "SCALAR",
@@ -3960,23 +4109,6 @@
         "onFragment" : false,
         "onField" : true
       }, {
-        "name" : "deprecated",
-        "description" : null,
-        "locations" : [ "FIELD_DEFINITION", "ENUM_VALUE" ],
-        "args" : [ {
-          "name" : "reason",
-          "description" : null,
-          "type" : {
-            "kind" : "SCALAR",
-            "name" : "String",
-            "ofType" : null
-          },
-          "defaultValue" : "\"No longer supported\""
-        } ],
-        "onOperation" : false,
-        "onFragment" : false,
-        "onField" : false
-      }, {
         "name" : "aws_api_key",
         "description" : "Tells the service this field/object has access authorized by an API key.",
         "locations" : [ "OBJECT", "FIELD_DEFINITION" ],
@@ -4051,6 +4183,23 @@
             }
           },
           "defaultValue" : null
+        } ],
+        "onOperation" : false,
+        "onFragment" : false,
+        "onField" : false
+      }, {
+        "name" : "deprecated",
+        "description" : null,
+        "locations" : [ "FIELD_DEFINITION", "ENUM_VALUE" ],
+        "args" : [ {
+          "name" : "reason",
+          "description" : null,
+          "type" : {
+            "kind" : "SCALAR",
+            "name" : "String",
+            "ofType" : null
+          },
+          "defaultValue" : "\"No longer supported\""
         } ],
         "onOperation" : false,
         "onFragment" : false,

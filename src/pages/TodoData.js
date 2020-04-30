@@ -68,7 +68,8 @@ return (
 }
 
 const styles = {
-    container: { width: 400, margin: '0 auto', display: 'flex', flex: 1, flexDirection: 'column', padding: 20 },
+    container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 5 },
+    //container: { width: 400, margin: '0 auto', display: 'flex', flex: 1, flexDirection: 'column', padding: 20 },
     todo: { fontSize: 12, marginBottom: 15 },
     input: { border: 'none', backgroundColor: '#ddd', marginBottom: 10, padding: 8, fontSize: 12 },
     todoName: { fontSize: 12, fontWeight: 'bold' },
