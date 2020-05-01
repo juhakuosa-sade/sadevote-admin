@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import { API, graphqlOperation } from 'aws-amplify'
+import { generateId } from '../App'
+
 import { createUser } from '../graphql/mutations'
 import { listUsers } from '../graphql/queries'
 import '../App.css';
 
 const userInitialState = {
-    id: '',
+    id: generateId(),
     email: '',
     firstname: '',
     lastname: '',
@@ -16,10 +18,11 @@ const userInitialState = {
 const UsersData = () => {
     const [formState, setFormState] = useState(userInitialState)
     const [users, setUsers] = useState([])
-    formState.shares = '';
+    //formState.shares = '';
 
     useEffect(() => {
         fetchUsers()
+        formState.shares = '';
     }, [])
 
     function setInput(key, value) {
@@ -45,8 +48,9 @@ const UsersData = () => {
             if ((user.shares<0) || (user.shares===null) || (user.shares==='')) user.shares = 0;
             console.log('creating user:', user)
             setUsers([...users, user])
+            userInitialState.id = generateId();
             setFormState(userInitialState)
-            formState.shares='';
+            //formState.shares='';
             await API.graphql(graphqlOperation(createUser, {input: user}))
         } catch (err) {
             console.log('error creating user:', err)
@@ -58,9 +62,11 @@ const UsersData = () => {
             <h3>Users</h3>
             <input
                 onChange={event => setInput('id', event.target.value)}
-                style={styles.input}
+                style={styles.inputDisabled}
                 value={formState.id}
                 placeholder="ID"
+                disabled={true}
+                hidden={true}
             />
             <input
                 onChange={event => setInput('email', event.target.value)}
@@ -104,6 +110,7 @@ const styles = {
     container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 5 },
     user: {  fontSize: 12, marginBottom: 15 },
     input: { border: 'none', backgroundColor: '#ddd', marginBottom: 10, padding: 8, fontSize: 12 },
+    inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 10, padding: 8, fontSize: 12 },
     userName: { fontSize: 12, fontWeight: 'bold' },
     userDescription: { fontSize: 12, marginBottom: 0 },
     button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '12px 0px' }

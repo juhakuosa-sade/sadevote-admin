@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
+import { v4 as uuidv4 } from 'uuid';
+
 
 import logo from './svg/sade_innovations_on_black_background.svg';
 import './App.css';
@@ -19,10 +21,15 @@ const pageTopics='/topics'
 const pageTodos='/todos';
 
 
-function signOut() {
+export function signOut() {
     console.log("Signing out");
     Auth.signOut();
   }
+
+export function generateId() {
+    return uuidv4();
+}
+
   
 /**
  * Class App
