@@ -37,6 +37,51 @@ export const deleteTodo = /* GraphQL */ `
     }
   }
 `;
+export const createMeeting = /* GraphQL */ `
+  mutation CreateMeeting(
+    $input: CreateMeetingInput!
+    $condition: ModelMeetingConditionInput
+  ) {
+    createMeeting(input: $input, condition: $condition) {
+      id
+      name
+      description
+      admins
+      users
+      topics
+    }
+  }
+`;
+export const updateMeeting = /* GraphQL */ `
+  mutation UpdateMeeting(
+    $input: UpdateMeetingInput!
+    $condition: ModelMeetingConditionInput
+  ) {
+    updateMeeting(input: $input, condition: $condition) {
+      id
+      name
+      description
+      admins
+      users
+      topics
+    }
+  }
+`;
+export const deleteMeeting = /* GraphQL */ `
+  mutation DeleteMeeting(
+    $input: DeleteMeetingInput!
+    $condition: ModelMeetingConditionInput
+  ) {
+    deleteMeeting(input: $input, condition: $condition) {
+      id
+      name
+      description
+      admins
+      users
+      topics
+    }
+  }
+`;
 export const createUser = /* GraphQL */ `
   mutation CreateUser(
     $input: CreateUserInput!
@@ -92,15 +137,7 @@ export const createTopic = /* GraphQL */ `
       topic_number
       topic_title
       topic_text
-      voting_options {
-        topic_id
-        topic_number
-        id
-        option_number
-        option_text
-        votes
-        unanimously_selected
-      }
+      voting_options
       voting_options_count
       active
       voting_percentage
@@ -117,15 +154,7 @@ export const updateTopic = /* GraphQL */ `
       topic_number
       topic_title
       topic_text
-      voting_options {
-        topic_id
-        topic_number
-        id
-        option_number
-        option_text
-        votes
-        unanimously_selected
-      }
+      voting_options
       voting_options_count
       active
       voting_percentage
@@ -142,15 +171,7 @@ export const deleteTopic = /* GraphQL */ `
       topic_number
       topic_title
       topic_text
-      voting_options {
-        topic_id
-        topic_number
-        id
-        option_number
-        option_text
-        votes
-        unanimously_selected
-      }
+      voting_options
       voting_options_count
       active
       voting_percentage

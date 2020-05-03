@@ -26,6 +26,37 @@ export const listTodos = /* GraphQL */ `
     }
   }
 `;
+export const getMeeting = /* GraphQL */ `
+  query GetMeeting($id: ID!) {
+    getMeeting(id: $id) {
+      id
+      name
+      description
+      admins
+      users
+      topics
+    }
+  }
+`;
+export const listMeetings = /* GraphQL */ `
+  query ListMeetings(
+    $filter: ModelMeetingFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listMeetings(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        name
+        description
+        admins
+        users
+        topics
+      }
+      nextToken
+    }
+  }
+`;
 export const getUser = /* GraphQL */ `
   query GetUser($id: ID!) {
     getUser(id: $id) {
@@ -64,15 +95,7 @@ export const getTopic = /* GraphQL */ `
       topic_number
       topic_title
       topic_text
-      voting_options {
-        topic_id
-        topic_number
-        id
-        option_number
-        option_text
-        votes
-        unanimously_selected
-      }
+      voting_options
       voting_options_count
       active
       voting_percentage
@@ -91,15 +114,7 @@ export const listTopics = /* GraphQL */ `
         topic_number
         topic_title
         topic_text
-        voting_options {
-          topic_id
-          topic_number
-          id
-          option_number
-          option_text
-          votes
-          unanimously_selected
-        }
+        voting_options
         voting_options_count
         active
         voting_percentage

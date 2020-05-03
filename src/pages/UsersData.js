@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { API, graphqlOperation } from 'aws-amplify'
+import PropTypes from 'prop-types';
+
 import { generateId } from '../App'
+import { addUserToList } from './MeetingsData'
 
 import { createUser } from '../graphql/mutations'
 import { listUsers } from '../graphql/queries'
@@ -11,22 +14,29 @@ const userInitialState = {
     email: '',
     firstname: '',
     lastname: '',
-    shares: 0,
+    shares: '',
     present: false
 }
 
-const UsersData = () => {
+const UsersData = ({parentCallback}) => {
     const [formState, setFormState] = useState(userInitialState)
     const [users, setUsers] = useState([])
-    //formState.shares = '';
+
+    /*setFormState({ 
+        shares: ''
+    });*/
 
     useEffect(() => {
         fetchUsers()
-        formState.shares = '';
     }, [])
 
     function setInput(key, value) {
         setFormState({ ...formState, [key]: value })
+    }
+
+    function clearState() {
+        userInitialState.id = generateId();
+        setFormState(userInitialState)
     }
 
     async function fetchUsers() {
@@ -47,14 +57,25 @@ const UsersData = () => {
             const user = { ...formState }
             if ((user.shares<0) || (user.shares===null) || (user.shares==='')) user.shares = 0;
             console.log('creating user:', user)
+            
             setUsers([...users, user])
-            userInitialState.id = generateId();
-            setFormState(userInitialState)
-            //formState.shares='';
             await API.graphql(graphqlOperation(createUser, {input: user}))
+            
+            //console.log("parentCallback", parentCallback);
+            //parentCallback(user.id);
+            addUserToList(user.id);
+
+            clearState();
+
         } catch (err) {
             console.log('error creating user:', err)
         }
+    }
+
+    function mytester() {
+        var userList = ["77bd517b-ec45-4d9e-a9c1-a3da06c7ef06", "669d6fe0-87ce-43bd-ac3c-754b9e79ece8"];
+        addUserToList(userList[0]);
+        addUserToList(userList[1]);
     }
 
     return (
@@ -92,6 +113,7 @@ const UsersData = () => {
                 value={formState.shares}
                 placeholder="Shares"
             />
+            <button style={styles.button} onClick={mytester}>Tester</button>
             <button style={styles.button} onClick={addUser}>Create User</button>
             {
                 users.map((user, index) => (
@@ -105,6 +127,10 @@ const UsersData = () => {
         </div>
     )
 }
+
+UsersData.propTypes = {
+    parentCallback: PropTypes.func
+};
 
 const styles = {
     container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 5 },

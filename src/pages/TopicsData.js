@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import CatInputs from './CatInputs';
+import PropTypes from 'prop-types';
 
 import '../App.css';
 import { generateId } from '../App'
+import { addTopicToList } from './MeetingsData'
 
 import { API, graphqlOperation } from 'aws-amplify'
 import { listTopics } from '../graphql/queries'
 import { createTopic } from '../graphql/mutations'
 import { createVotingOption } from '../graphql/mutations'
-import { listVotingOptions } from '../graphql/queries'
+//import { listVotingOptions } from '../graphql/queries'
 
 
 const topicInitialState = {
@@ -16,6 +18,7 @@ const topicInitialState = {
     topic_number: '',
     topic_title: '',
     topic_text: '',
+    voting_options: [...''],
     voting_options_count: 0,
     active: false,
     voting_percentage: 0.0,
@@ -31,14 +34,13 @@ const votingOptionInitialState = {
     unanimously_selected: false,
 }
 
-const TopicsData = () => {
-    
+const TopicsData = ({parentCallback}) => {
+
 /** Cat */
     const blankCat = { catNumber: '', catText: '' };
     const [catState, setCatState] = useState([
         { ...blankCat },
     ]);
-
 
     function clearCatState() {
         setCatState([{ ...blankCat }]);
@@ -58,14 +60,14 @@ const TopicsData = () => {
 
 /** Voting options */
     const votingOptionToAdd = { ...votingOptionInitialState }
-
+/*
     async function fetchVotingOptions() {
         try {
             const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions))
             const votingOptions = votingOptionData.data.listVotingOptions.items
         } catch (err) { console.log('error fetching votingOptions') }
     }
-
+*/
     async function addVotingOption() {
         try {
             if (!(votingOptionToAdd.id)) {
@@ -105,7 +107,6 @@ const TopicsData = () => {
 
     function clearState() {
         topicInitialState.id = generateId();
-        setTopicState(topicInitialState)
         clearCatState();
         setTopicState(topicInitialState)
     }
@@ -136,6 +137,7 @@ const TopicsData = () => {
                 console.log("foreach: ", index, element.catNumber, element.catText);
                 if ((element.catNumber>0) && (element.catText.length>0)) {
                     composeVotingOption(index++);
+//                    topic.votingOptions[index++] = votingOptionToAdd.id;
                     addVotingOption();          
                 }
                 else {
@@ -145,14 +147,25 @@ const TopicsData = () => {
             })
 
         topic.voting_options_count = index;
-        setTopics([...topics, topic])
-        await API.graphql(graphqlOperation(createTopic, {input: topic}))
+        setTopics([...topics, topic]);
+        await API.graphql(graphqlOperation(createTopic, {input: topic}));
+        
+        //console.log("parentCallback", parentCallback);
+        //parentCallback(topic.id);
+        addTopicToList(topic.id);
 
         clearState();
 
         } catch (err) {
-            console.log('error creating topic:', err)
+            console.log('error creating topic:', err);
         }
+    }
+
+    function mytester() {
+        var topicList = ["38b407e2-313d-402b-86dd-25c0c0c0e968", "0eb3acc7-c9b1-4560-8b0b-2326d24e0101", "cdb01a56-243f-4c95-83ad-1b6da5a276f3"];
+        addTopicToList(topicList[0]);
+        addTopicToList(topicList[1]);
+        addTopicToList(topicList[2]);
     }
 
 /** UI */
@@ -165,7 +178,7 @@ const TopicsData = () => {
                 value={topicState.id}
                 placeholder="ID"
                 disabled={true}
-                hidden={true}
+                hidden={false}
             />
             <input
                 onChange={event => setInput('topic_number', event.target.value)}
@@ -189,17 +202,18 @@ const TopicsData = () => {
         
             <button style={styles.button} onClick={addCat}>Add voting option</button> 
             {
-                catState.map((val, idx) => (
-                    <CatInputs
-                        style={styles.input}
-                        key={`cat-${idx}`}
-                        idx={idx}
-                        catState={catState}
-                        handleCatChange={handleCatChange}
-                    />
-                ))
+            catState.map((val, idx) => (
+                <CatInputs
+                    style={styles.input}
+                    key={`cat-${idx}`}
+                    idx={idx}
+                    catState={catState}
+                    handleCatChange={handleCatChange}
+                />
+            ))
             }
                 
+            <button style={styles.button} onClick={mytester}>Tester</button>
             <button style={styles.button2} onClick={addTopic}>Create Topic</button>
             {
                 topics.map((topic, index) => (
@@ -214,6 +228,10 @@ const TopicsData = () => {
         </div>
         )    
 }
+
+TopicsData.propTypes = {
+    parentCallback: PropTypes.func
+};
 
 const styles = {
     container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 5 },

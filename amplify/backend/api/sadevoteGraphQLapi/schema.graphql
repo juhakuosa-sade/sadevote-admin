@@ -3,6 +3,14 @@ type Todo @model {
   name: String!
   description: String
 }
+type Meeting @model {
+  id: ID!
+  name: String!
+  description: String
+  admins:  [ID]
+  users:  [ID]
+  topics:  [ID]
+}
 type User @model {
   id: ID!
   email: String!
@@ -13,20 +21,20 @@ type User @model {
 }
 type Topic @model {
   id: ID!
-  topic_number: Int
-  topic_title: String
+  topic_number: Int!
+  topic_title: String!
   topic_text: String
-  voting_options: [VotingOption]
-  voting_options_count: Int
+  voting_options: [ID]
+  voting_options_count: Int!
   active: Boolean
   voting_percentage: Float
 }
 type VotingOption @model {
   topic_id: ID!
-  topic_number: Int
+  topic_number: Int!
   id: ID!
-  option_number: Int
+  option_number: Int!
   option_text: String
-  votes: Int!
+  votes: Int
   unanimously_selected: Boolean
 }

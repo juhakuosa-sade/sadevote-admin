@@ -28,6 +28,42 @@ export const onDeleteTodo = /* GraphQL */ `
     }
   }
 `;
+export const onCreateMeeting = /* GraphQL */ `
+  subscription OnCreateMeeting {
+    onCreateMeeting {
+      id
+      name
+      description
+      admins
+      users
+      topics
+    }
+  }
+`;
+export const onUpdateMeeting = /* GraphQL */ `
+  subscription OnUpdateMeeting {
+    onUpdateMeeting {
+      id
+      name
+      description
+      admins
+      users
+      topics
+    }
+  }
+`;
+export const onDeleteMeeting = /* GraphQL */ `
+  subscription OnDeleteMeeting {
+    onDeleteMeeting {
+      id
+      name
+      description
+      admins
+      users
+      topics
+    }
+  }
+`;
 export const onCreateUser = /* GraphQL */ `
   subscription OnCreateUser {
     onCreateUser {
@@ -71,15 +107,7 @@ export const onCreateTopic = /* GraphQL */ `
       topic_number
       topic_title
       topic_text
-      voting_options {
-        topic_id
-        topic_number
-        id
-        option_number
-        option_text
-        votes
-        unanimously_selected
-      }
+      voting_options
       voting_options_count
       active
       voting_percentage
@@ -93,15 +121,7 @@ export const onUpdateTopic = /* GraphQL */ `
       topic_number
       topic_title
       topic_text
-      voting_options {
-        topic_id
-        topic_number
-        id
-        option_number
-        option_text
-        votes
-        unanimously_selected
-      }
+      voting_options
       voting_options_count
       active
       voting_percentage
@@ -115,15 +135,7 @@ export const onDeleteTopic = /* GraphQL */ `
       topic_number
       topic_title
       topic_text
-      voting_options {
-        topic_id
-        topic_number
-        id
-        option_number
-        option_text
-        votes
-        unanimously_selected
-      }
+      voting_options
       voting_options_count
       active
       voting_percentage

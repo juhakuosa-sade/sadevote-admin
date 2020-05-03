@@ -14,11 +14,13 @@ import Home from "./pages/Home";
 import UsersData from "./pages/UsersData";
 import TopicsData from "./pages/TopicsData";
 import TodoData from "./pages/TodoData";
+import MeetingsData from "./pages/MeetingsData";
 
 const pageHome='/';
 const pageUsers='/users'
 const pageTopics='/topics'
 const pageTodos='/todos';
+const pageMeetings='/meetings';
 
 
 export function signOut() {
@@ -40,14 +42,16 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            toPage: pageHome
+            toPage: pageHome,
         }
 
+        this.goPage = this.goPage.bind(this);
         this.goHome = this.goHome.bind(this);
         this.goUsers = this.goUsers.bind(this);
         this.goTopics = this.goTopics.bind(this);
         this.goTodos = this.goTodos.bind(this);
-        this.goPage = this.goPage.bind(this);
+        this.goMeetings = this.goMeetings.bind(this);
+
     }
 
     goPage(page) {
@@ -73,6 +77,10 @@ class App extends Component {
         this.goPage(pageTodos)
     }
     
+    goMeetings() {
+        this.goPage(pageMeetings)
+    }
+    
     render () {
         
         return (
@@ -90,6 +98,8 @@ class App extends Component {
                         <button style={styles.button} onClick={this.goTopics}>Topics</button>
                         <button style={styles.button} onClick={this.goTodos}>Todos</button>
                         <hr/>
+                        <button style={styles.button} onClick={this.goMeetings}>Meetings</button>
+                        <hr/>
                         <button style={styles.button} onClick={() => signOut()}>Sign out</button>  
                         <p/>
                     </div>  
@@ -102,6 +112,7 @@ class App extends Component {
                                     <Route path={pageUsers} component={UsersData} />
                                     <Route path={pageTopics} component={TopicsData} />
                                     <Route path={pageTodos} component={TodoData} />
+                                    <Route path={pageMeetings} component={MeetingsData} />
                                 </Switch>
                             </div>
                         </BrowserRouter>
