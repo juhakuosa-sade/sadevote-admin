@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import { API, graphqlOperation } from 'aws-amplify'
-import PropTypes from 'prop-types';
 
 import { generateId } from '../App'
 import { addUserToList } from './MeetingsData'
@@ -18,26 +17,13 @@ const userInitialState = {
     present: false
 }
 
-const UsersData = ({parentCallback}) => {
+const UsersData = () => {
     const [formState, setFormState] = useState(userInitialState)
     const [users, setUsers] = useState([])
-
-    /*setFormState({ 
-        shares: ''
-    });*/
 
     useEffect(() => {
         fetchUsers()
     }, [])
-
-    function setInput(key, value) {
-        setFormState({ ...formState, [key]: value })
-    }
-
-    function clearState() {
-        userInitialState.id = generateId();
-        setFormState(userInitialState)
-    }
 
     async function fetchUsers() {
         try {
@@ -61,8 +47,6 @@ const UsersData = ({parentCallback}) => {
             setUsers([...users, user])
             await API.graphql(graphqlOperation(createUser, {input: user}))
             
-            //console.log("parentCallback", parentCallback);
-            //parentCallback(user.id);
             addUserToList(user.id);
 
             clearState();
@@ -71,11 +55,14 @@ const UsersData = ({parentCallback}) => {
             console.log('error creating user:', err)
         }
     }
+    
+    function setInput(key, value) {
+        setFormState({ ...formState, [key]: value })
+    }
 
-    function mytester() {
-        var userList = ["77bd517b-ec45-4d9e-a9c1-a3da06c7ef06", "669d6fe0-87ce-43bd-ac3c-754b9e79ece8"];
-        addUserToList(userList[0]);
-        addUserToList(userList[1]);
+    function clearState() {
+        userInitialState.id = generateId();
+        setFormState(userInitialState)
     }
 
     return (
@@ -113,7 +100,7 @@ const UsersData = ({parentCallback}) => {
                 value={formState.shares}
                 placeholder="Shares"
             />
-            <button style={styles.button} onClick={mytester}>Tester</button>
+            
             <button style={styles.button} onClick={addUser}>Create User</button>
             {
                 users.map((user, index) => (
@@ -127,10 +114,6 @@ const UsersData = ({parentCallback}) => {
         </div>
     )
 }
-
-UsersData.propTypes = {
-    parentCallback: PropTypes.func
-};
 
 const styles = {
     container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 5 },

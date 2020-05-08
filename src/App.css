@@ -34,9 +34,10 @@
 .App-input-row-item {
   text-align: left;
   background-color: white;
-  align-items: start;
+  align-items: right;
   color: black;
   margin-top: 5px;
+  padding: 5px;
 }
 
 .App-input-item {
@@ -54,8 +55,8 @@
 }
 
 .App-horizontal-divider {
-  margin-top: 5px;
-  margin-bottom: 5px;
+  margin-top: 0px;
+  margin-bottom: 0px;
   height: 1px;
   background-color: darkgrey;
   color: darkgrey;

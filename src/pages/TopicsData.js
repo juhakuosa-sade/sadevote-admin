@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
 import CatInputs from './CatInputs';
-import PropTypes from 'prop-types';
 
 import '../App.css';
 import { generateId } from '../App'
@@ -34,7 +33,7 @@ const votingOptionInitialState = {
     unanimously_selected: false,
 }
 
-const TopicsData = ({parentCallback}) => {
+const TopicsData = () => {
 
 /** Cat */
     const blankCat = { catNumber: '', catText: '' };
@@ -150,8 +149,6 @@ const TopicsData = ({parentCallback}) => {
         setTopics([...topics, topic]);
         await API.graphql(graphqlOperation(createTopic, {input: topic}));
         
-        //console.log("parentCallback", parentCallback);
-        //parentCallback(topic.id);
         addTopicToList(topic.id);
 
         clearState();
@@ -159,13 +156,6 @@ const TopicsData = ({parentCallback}) => {
         } catch (err) {
             console.log('error creating topic:', err);
         }
-    }
-
-    function mytester() {
-        var topicList = ["38b407e2-313d-402b-86dd-25c0c0c0e968", "0eb3acc7-c9b1-4560-8b0b-2326d24e0101", "cdb01a56-243f-4c95-83ad-1b6da5a276f3"];
-        addTopicToList(topicList[0]);
-        addTopicToList(topicList[1]);
-        addTopicToList(topicList[2]);
     }
 
 /** UI */
@@ -213,11 +203,9 @@ const TopicsData = ({parentCallback}) => {
             ))
             }
                 
-            <button style={styles.button} onClick={mytester}>Tester</button>
             <button style={styles.button2} onClick={addTopic}>Create Topic</button>
             {
                 topics.map((topic, index) => (
-
                     <div key={topic.id ? topic.id : index} style={styles.topic}>
                         <p style={styles.topicName}>{topic.id} {topic.topic_number} {topic.topic_title}</p>
                         <p style={styles.topicDescription}>{topic.topic_text}</p>
@@ -228,10 +216,6 @@ const TopicsData = ({parentCallback}) => {
         </div>
         )    
 }
-
-TopicsData.propTypes = {
-    parentCallback: PropTypes.func
-};
 
 const styles = {
     container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 5 },
