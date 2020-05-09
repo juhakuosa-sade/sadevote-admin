@@ -33,6 +33,20 @@ export function generateId() {
     return uuidv4();
 }
 
+
+const mtg = {
+    id : "",
+    name : "",
+    description : ''
+}
+
+export function setSelectedMeeting(id, name, description) {
+    mtg.id=id;
+    mtg.name=name;
+    mtg.description=description;
+    console.log("SELECTED MTG", mtg.id, mtg.name, mtg.description);
+}
+
   
 /**
  * Class App
@@ -105,6 +119,13 @@ class App extends Component {
                         <p/>
                     </div>  
                     <div style={styles.container}>
+                        <div style={styles.status}>
+                            { 
+                            mtg.id 
+                                ? <div> Selected meeting: { mtg.name } ({ mtg.id }) </div> 
+                                : <div></div>
+                            } 
+                        </div>
                         <BrowserRouter>
                             <div>
                                 <Redirect to= {this.state.toPage} />
@@ -131,7 +152,8 @@ const styles = {
     navcontainer: { backgroundColor: 'grey', width: 100, margin: '0 0', display: 'flex', flexDirection: 'column', justifyContent: 'left', padding: 5 },
     container: { width: 500, margin: '0 auto', justifyContent: 'center', padding: 10 },
  //   container: { width: 500, margin: '0 auto', display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', padding: 20 },
-    button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '8px 0px' }
+    button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '8px 0px' },
+    status: { color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' }
 }
 
 export default withAuthenticator(App)

@@ -69,8 +69,8 @@
                     "defaultAuthentication": {
                         "authenticationType": "API_KEY",
                         "apiKeyConfig": {
-                            "description": "sadevoteadmin",
-                            "apiKeyExpirationDays": "7"
+                            "description": "sadevotegraphqlapi",
+                            "apiKeyExpirationDays": "300"
                         }
                     }
                 }

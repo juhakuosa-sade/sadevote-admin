@@ -5,6 +5,8 @@ import { API, graphqlOperation } from 'aws-amplify'
 
 import { listMeetings } from '../graphql/queries'
 import MeetingData from './MeetingsData';
+import App, { setSelectedMeeting } from '../App';
+
 
 const initState = {
     renderSelect : "CREATE",
@@ -30,6 +32,13 @@ const MeetingsList = () => {
         } catch (err) { console.log('error fetching meetings') }
     }
 
+    const driveRendering = ({param, doit}) => {
+        /* set some shit to state so that it causes rendering! */
+        setState({renderSelect: "LIST"});
+        setState({editParam : param});
+        setState({doRender : doit});
+    }
+
     const handleEdit = (event) => {
         const id = event.target.getAttribute('id');
         console.log("handleEdit: ID", id);
@@ -38,13 +47,30 @@ const MeetingsList = () => {
         fState.editParam=id;
         fState.doRender=true;
 
+        driveRendering(id, true);
+
+        console.log("handleEdit1:", fState.renderSelect, fState.editParam, fState.doRender);
+    }
+    
+    const handleSelect = (event) => {
+        const id = event.target.getAttribute('id');
+        const name = event.target.getAttribute('name');
+        const desc = event.target.getAttribute('desc');
+
+        console.log("handleSelect: ID", id);
+
+        setSelectedMeeting(id, name, desc);
+
+        fState.renderSelect="SELECT";
+        fState.editParam=id;
+        fState.doRender=true;
+
         /* MIKS NÄÄ EI TOIMI?! */
-        setState({renderSelect: "EDIT"});
+        setState({renderSelect: "SELECT"});
         setState({editParam : id});
         setState({doRender : true});
 
-        console.log("handleEdit1:", fState.renderSelect, fState.editParam, fState.doRender);
-        console.log("handleEdit2:", uiState.renderSelect, uiState.editParam, uiState.doRender);
+        console.log("handleSelect:", fState.renderSelect, fState.editParam, fState.doRender);
 
     }
     
@@ -54,42 +80,28 @@ const MeetingsList = () => {
     }
 
     const renderEdit = () => {
-        
-        console.log("renderEdit1", fState.renderSelect, fState.editParam, fState.doRender );
-        console.log("renderEdit2", uiState.renderSelect, uiState.editParam, uiState.doRender );
-
         if (!fState.doRender) return;
         fState.doRender=false;
         
-        return (
-            <MeetingData itemId = {fState.editParam} /> 
-        );
+    }
+    
+    const renderSelect = () => {
+        if (!fState.doRender) return;
+        fState.doRender=false;
         
-        /*
-        if (!uiState.doRender) return;
-        setState({doRender : false});
-
-        return (
-            <MeetingData itemId = {uiState.editParam} /> 
-        );
-        */
     }
     
 
-console.log("meetings count", meetings.length);
+console.log("Rendering", fState.renderSelect);
 
 if (!fState.doRender && meetings.length>0) 
-//if (!uiState.doRender && meetings.length>0) 
 { 
     fState.renderSelect = "LIST"; 
     fState.editParam = ''; 
 
-    //setState({renderSelect: "LIST"});
-    //setState({editParam : ''});
 } 
 
-if (fState.renderSelect === "LIST")
-//if (uiState.renderSelect === "LIST")
+if (fState.renderSelect === "LIST") {
     return (
     <div style={styles.container}>
         <h3>Meetings</h3>        
@@ -105,7 +117,8 @@ if (fState.renderSelect === "LIST")
                     <button style={styles.button} id={meeting.id} onClick={handleEdit}>Edit</button>
                     {renderEdit()}
                     <button style={styles.button} id={meeting.id} onClick={handleDelete}>Delete</button>
-                    
+                    <button style={styles.button} id={meeting.id} name={meeting.name} desc={meeting.description} onClick={handleSelect}>Select</button>
+                    {renderSelect()}
                 </div>    
 
             ))
@@ -113,6 +126,38 @@ if (fState.renderSelect === "LIST")
                 
     </div>
     )
+    }
+
+else if (fState.renderSelect === "SELECT") {
+    const selected = fState.editParam;
+    fState.renderSelect="LIST";
+    fState.editParam='';
+    return (
+    <div style={styles.container}>
+        <h3>Meeting selected:</h3>        
+        {
+            meetings.map((meeting, index) => (
+                <div key={meeting.id ? meeting.id : index}>
+                {
+                meeting.id === selected 
+                ? 
+                    <div> 
+                        <p style={styles.meetingDescription}>{meeting.id}</p>
+                        <p/>
+                        <p style={styles.meetingName}>{meeting.name}</p>
+                        <p style={styles.meetingDescription}>{meeting.description}</p>
+                    </div>   
+                : 
+                <p/> 
+                }                
+                </div>
+            ))
+        }
+                
+    </div>
+    )
+    }
+    
 
 else if (fState.renderSelect === "EDIT") {
     return (
@@ -121,15 +166,7 @@ else if (fState.renderSelect === "EDIT") {
     </div>
     )
 }
-/*
-else if (uiState.renderSelect === "EDIT") {
-    return (
-    <div style={styles.container}>
-        <MeetingData itemId = {uiState.editParam} />  
-    </div>
-    )
-}
-*/
+
 else // (renderSelect == "CREATE")
     return (
     <div style={styles.container}>
@@ -142,7 +179,7 @@ const styles = {
     container: { width: 500, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 0 },
     rowcontainer: { alignItems: 'right', color: 'black', backgroundColor:'white', width: 500, margin: '0 0', display: 'flex', flexDirection: 'row', padding: 5 },
     meeting: { fontSize: 12, marginBottom: 15 },
-    meetingName: { fontSize: 12, fontWeight: 'bold', margin: 0, padding: 0 },
+    meetingName: { fontSize: 14, fontWeight: 'bold', margin: 0, padding: 0 },
     meetingDescription: { fontSize: 12, margin: 0, padding: 0 },
     topicDescription: { fontSize: 12, marginLeft: 20 },
     button: { width: 100, marginLeft: "auto", backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '8px 0px' },
