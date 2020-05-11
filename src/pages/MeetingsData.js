@@ -1,15 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
 import { API, graphqlOperation } from 'aws-amplify'
 import { generateId } from '../App'
 
-import Home from "./Home";
-import UsersData from "./UsersData";
-import TopicsData from "./TopicsData";
-
-import { createMeeting } from '../graphql/mutations'
+import { createMeeting, updateMeeting, deleteMeeting } from '../graphql/mutations'
 import { listMeetings } from '../graphql/queries'
 
 const meetingInitialState = { 
@@ -19,14 +14,6 @@ const meetingInitialState = {
     admins:  [...''],
     users:  [...''],
     topics:  [...'']
-}
-
-const pageHome='/';
-const pageUsers='/users'
-const pageTopics='/topics'
-
-const pageInitialState = {
-    toPage: pageHome,
 }
 
 var topicList = [...''];
@@ -42,19 +29,36 @@ export function addUserToList(id) {
     console.log("addUserToList", id);
 }
 
+var prefill = true;
+var useUpdate = false;
+
 const MeetingData = (itemId) => {
+    console.log("ITEMID", itemId);
     const [meetingState, setMeetingState] = useState(meetingInitialState);
     const [meetings, setMeetings] = useState([]);
-
-    const [pageState, setPageState] = useState(pageInitialState);
 
     useEffect(() => {
        fetchMeetings()
     }, []);
 
-    if (itemId) {
+    useEffect(() => { 
+        // do after mounting   
+        {
+            enablePrefill();
+            setMeetingState({...meetingInitialState});
+        }
+        // do before unmounting
+        return () => {
+            //setMeetingState({...meetingInitialState});
+        };
+      }, []); // passing empty array means do only once (https://reactjs.org/docs/hooks-effect.html)
+
+
+
+    if ((itemId)&&(itemId.itemId)) {
         preFillForm(itemId, meetings);
     }
+
 
     function collectTopics() {
         meetingState.topics = topicList;
@@ -71,11 +75,12 @@ const MeetingData = (itemId) => {
     }
 
     function getMeeting(itemId) {
-        var mtg = meetingInitialState;
+        var mtg = {...meetingInitialState};
 
         meetings.forEach(meeting => {
-        if (itemId.itemId === meeting.id) {
+        if (itemId && itemId.itemId === meeting.id) {
             console.log("getMeeting: found it!");
+            useUpdate=true;
             mtg = {...meeting};
         }
         });
@@ -84,6 +89,10 @@ const MeetingData = (itemId) => {
     }
 
     function preFillForm(itemId) {
+        if (!prefill) {
+            console.log("SKIP prefill")
+            return
+        }
         const mtg = getMeeting(itemId);
         meetingState.id = mtg.id;
         meetingState.name = mtg.name;
@@ -116,28 +125,100 @@ const MeetingData = (itemId) => {
         }
     }
 
+    async function updMeeting() {
+        try {
+            if (!meetingState.name || !meetingState.description) return
+            collectTopics();
+            collectUsers();
+            const meeting = { ...meetingState };
+            setMeetings([...meetings, meeting]);
+            clearState();
+            await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
+        } catch (err) {
+            console.log('error updating meeting:', err)
+        }
+    }
+
     function clearState() {
         meetingInitialState.id = generateId();
         setMeetingState(meetingInitialState);
         topicList = [...''];
         userList = [...''];
     }
+
+    function disablePrefill() {
+        console.log("Disable prefill");
+        prefill = false;
+    }
+
+    function enablePrefill() {
+        console.log("Enable prefill");
+        prefill = true;
+    }
     
-    function goPage(page) {
-        console.log("Go Page '",page,"'");
-        setPageState({ 
-            toPage: page
-        });
-    }
+    
+return (
 
-    function goUsers() {
-        goPage(pageUsers)
-    }
+    <div style={styles.container}>
+        <h3>Meetings</h3>
+        <input
+            onFocus={disablePrefill}
+            onChange={event => setInput('id', event.target.value)}
+            style={styles.inputDisabled}
+            value={meetingState.id}
+            placeholder="ID"
+            disabled={true}
+            hidden={false}
+        />
+        <input
+            onFocus={disablePrefill}
+            onChange={event => setInput('name', event.target.value)}
+            style={styles.input}
+            value={meetingState.name}
+            placeholder="Name"
+            disabled={false}
+        />
+        <input
+            onFocus={disablePrefill}
+            onChange={event => setInput('description', event.target.value)}
+            style={styles.input}
+            value={meetingState.description}
+            placeholder="Description"
+            disabled={false}
+        />
+        <div>
+            <p/>
+        </div>       
+        {
+        useUpdate
+        ?
+        <button style={styles.button} onClick={updMeeting}>Update Meeting</button>
+        :
+        <button style={styles.button} onClick={addMeeting}>Create Meeting</button>
+        }
+    </div>
 
-    function goTopics() {
-        goPage(pageTopics)
-    }
+    )
+}
 
+MeetingData.propTypes = {
+    itemId: PropTypes.string
+}
+
+const styles = {
+    container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 5 },
+    meeting: { fontSize: 12, marginBottom: 15 },
+    input: { border: 'none', backgroundColor: '#ddd', marginBottom: 1, padding: 8, fontSize: 12 },
+    inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 1, padding: 8, fontSize: 12 },
+    meetingName: { fontSize: 12, fontWeight: 'bold' },
+    meetingDescription: { fontSize: 12, marginBottom: 0 },
+    topicDescription: { fontSize: 12, marginLeft: 20 },
+    button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '12px 0px' }
+}
+
+export default MeetingData;
+
+/*
 return (
 
     <div style={styles.container}>
@@ -191,21 +272,4 @@ return (
     </div>
     )
 }
-
-MeetingData.propTypes = {
-    itemId: PropTypes.string,
-}
-
-const styles = {
-    container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 5 },
-    meeting: { fontSize: 12, marginBottom: 15 },
-    input: { border: 'none', backgroundColor: '#ddd', marginBottom: 10, padding: 8, fontSize: 12 },
-    inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 10, padding: 8, fontSize: 12 },
-    meetingName: { fontSize: 12, fontWeight: 'bold' },
-    meetingDescription: { fontSize: 12, marginBottom: 0 },
-    topicDescription: { fontSize: 12, marginLeft: 20 },
-    button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '12px 0px' }
-}
-
-export default MeetingData;
-
+*/
