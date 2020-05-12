@@ -34,7 +34,6 @@ var useUpdate = false;
 
 const MeetingData = ({itemId, updateMeetingsList}) => {
 //const MeetingData = (itemId) => {
-    console.log("ITEMID", itemId);
     const [meetingState, setMeetingState] = useState(meetingInitialState);
     const [meetings, setMeetings] = useState([]);
 
@@ -42,21 +41,24 @@ const MeetingData = ({itemId, updateMeetingsList}) => {
        fetchMeetings()
     }, []);
 
-   
-
     useEffect(() => { 
         // do after mounting   
             enablePrefill();
             setMeetingState({...meetingInitialState});
         // do before unmounting
         return () => {
+            restoreState();
         };
       }, []); // passing empty array means do only once (https://reactjs.org/docs/hooks-effect.html)
 
 
-
     if (itemId) {
         preFillForm(itemId, meetings);
+    }
+
+    function restoreState() {
+        prefill = true;
+        useUpdate=false;
     }
 
     function collectTopics() {
@@ -150,12 +152,10 @@ const MeetingData = ({itemId, updateMeetingsList}) => {
     }
 
     function disablePrefill() {
-        console.log("Disable prefill");
         prefill = false;
     }
 
     function enablePrefill() {
-        console.log("Enable prefill");
         prefill = true;
     }
     
@@ -221,59 +221,3 @@ const styles = {
 }
 
 export default MeetingData;
-
-/*
-return (
-
-    <div style={styles.container}>
-        <h3>Meetings</h3>
-        <input
-            onChange={event => setInput('id', event.target.value)}
-            style={styles.inputDisabled}
-            value={meetingState.id}
-            placeholder="ID"
-            disabled={true}
-            hidden={false}
-        />
-        <input
-            onChange={event => setInput('name', event.target.value)}
-            style={styles.input}
-            value={meetingState.name}
-            placeholder="Name"
-        />
-        <input
-            onChange={event => setInput('description', event.target.value)}
-            style={styles.input}
-            value={meetingState.description}
-            placeholder="Description"
-        />
-        <button style={styles.button} onClick={goUsers}>Users</button>
-        <button style={styles.button} onClick={goTopics}>Topics</button>     
-        <div>
-            <BrowserRouter>
-            <div>
-                <Redirect to= {pageState.toPage} />
-                <Switch>
-                    <Route exact path={pageHome} component={Home} />
-                    <Route path={pageUsers} component={UsersData} />
-                    <Route path={pageTopics} component={TopicsData} />
-                </Switch>
-            </div>
-            </BrowserRouter>
-        <p/>
-        </div>
-        <button style={styles.button} onClick={addMeeting}>Create Meeting</button>
-       
-        {
-        meetings.map((meeting, index) => (
-            <div key={meeting.id ? meeting.id : index} style={styles.meeting}>
-                <p style={styles.meetingName}>{meeting.name}</p>
-                <p style={styles.meetingDescription}>{meeting.description}</p>
-            </div>
-        ))
-        }
-
-    </div>
-    )
-}
-*/

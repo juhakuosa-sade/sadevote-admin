@@ -21,8 +21,6 @@ const MeetingsList = () => {
     const fState = initState ;
     const [uiState, setState] = useState(initState);
 
-    console.log("fetchcount", fetch);
-
     useEffect(() => {
         fetchMeetings();
     }, [])
@@ -67,6 +65,10 @@ const MeetingsList = () => {
 
     const handleEdit = (event) => {
         const id = event.target.getAttribute('id');
+        const name = event.target.getAttribute('name');
+        const desc = event.target.getAttribute('desc');
+
+        setSelectedMeeting(id, name, desc);
 
         fState.renderSelect="EDIT";
         fState.editParam=id;
@@ -151,7 +153,7 @@ if (fState.renderSelect === "LIST") {
         <button style={styles.buttonwide} onClick={handleCreate}>Create new meeting</button>
     </div>
     )
-    }
+}
 
 else if (fState.renderSelect === "SELECT") {
     const selected = resetRenderSelection();
@@ -179,7 +181,7 @@ else if (fState.renderSelect === "SELECT") {
                 
     </div>
     )
-    }
+}
     
 
 else if (fState.renderSelect === "EDIT") {
@@ -205,7 +207,7 @@ else if (fState.renderSelect === "DELETE") {
     )
 }
 
-else /* if (fState.renderSelect == "CREATE") */ {
+else /* if (fState.renderSelect === "CREATE") */ {
     resetRenderSelection();
     return (
     <div style={styles.container}>
@@ -222,7 +224,6 @@ const styles = {
     meeting: { fontSize: 12, marginBottom: 15 },
     meetingName: { fontSize: 14, fontWeight: 'bold', margin: 0, padding: 0 },
     meetingDescription: { fontSize: 12, margin: 0, padding: 0 },
-    topicDescription: { fontSize: 12, marginLeft: 20 },
     button: { width: 100, marginLeft: "auto", backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '8px 0px' },
     buttonwide: { marginTop: 10, width: 510, backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '12px 8px' },
 }

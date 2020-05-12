@@ -57,6 +57,7 @@ class App extends Component {
         super(props);
         this.state = {
             toPage: pageHome,
+            showWait: false,
         }
 
         this.goPage = this.goPage.bind(this);
@@ -71,7 +72,8 @@ class App extends Component {
     goPage(page) {
         console.log("Go Page '",page,"'");
         this.setState({ 
-            toPage: page
+            toPage: page,
+            showWait: true
         });
     }
 
@@ -112,7 +114,7 @@ class App extends Component {
                         <button style={styles.button} onClick={this.goTopics}>Topics</button>
                         <button style={styles.button} onClick={this.goTodos}>Todos</button>
                         <hr/>
-                        <button style={styles.button} onClick={this.goMeetings}>Meetings</button>
+                        <button style={styles.button} onClick={this.goMeetings}>Meetings</button> 
                         <hr/>
                         <button style={styles.button} onClick={() => signOut()}>Sign out</button>  
                         <p/>
@@ -127,6 +129,11 @@ class App extends Component {
                         </div>
                         <BrowserRouter>
                             <div>
+                                {
+                                this.showWait 
+                                    ? <div style = {styles.info}> Loading... </div>
+                                    : <div></div>
+                                } 
                                 <Redirect to= {this.state.toPage} />
                                 <Switch>
                                     <Route exact path={pageHome} component={Home} />
@@ -152,7 +159,8 @@ const styles = {
     container: { width: 500, margin: '0 auto', justifyContent: 'center', padding: 10 },
  //   container: { width: 500, margin: '0 auto', display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', padding: 20 },
     button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '8px 0px' },
-    status: { color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' }
+    status: { color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' },
+    info: { justifyContent: 'center', color: 'white', outline: 'none', fontSize: 10, padding: '4px 4px' }
 }
 
 export default withAuthenticator(App)
