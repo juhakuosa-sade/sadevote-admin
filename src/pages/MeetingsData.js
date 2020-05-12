@@ -4,10 +4,10 @@ import PropTypes from 'prop-types';
 import { API, graphqlOperation } from 'aws-amplify'
 import { generateId } from '../App'
 
-import { createMeeting, updateMeeting, deleteMeeting } from '../graphql/mutations'
+import { createMeeting, updateMeeting } from '../graphql/mutations'
 import { listMeetings } from '../graphql/queries'
 
-const meetingInitialState = { 
+export const meetingInitialState = { 
     id: generateId(),
     name: '', 
     description: '',
@@ -32,7 +32,8 @@ export function addUserToList(id) {
 var prefill = true;
 var useUpdate = false;
 
-const MeetingData = (itemId) => {
+const MeetingData = ({itemId, updateMeetingsList}) => {
+//const MeetingData = (itemId) => {
     console.log("ITEMID", itemId);
     const [meetingState, setMeetingState] = useState(meetingInitialState);
     const [meetings, setMeetings] = useState([]);
@@ -41,24 +42,22 @@ const MeetingData = (itemId) => {
        fetchMeetings()
     }, []);
 
+   
+
     useEffect(() => { 
         // do after mounting   
-        {
             enablePrefill();
             setMeetingState({...meetingInitialState});
-        }
         // do before unmounting
         return () => {
-            //setMeetingState({...meetingInitialState});
         };
       }, []); // passing empty array means do only once (https://reactjs.org/docs/hooks-effect.html)
 
 
 
-    if ((itemId)&&(itemId.itemId)) {
+    if (itemId) {
         preFillForm(itemId, meetings);
     }
-
 
     function collectTopics() {
         meetingState.topics = topicList;
@@ -74,11 +73,11 @@ const MeetingData = (itemId) => {
         setMeetingState({ ...meetingState, [key]: value })
     }
 
-    function getMeeting(itemId) {
+    function getMeeting(itemId, meetings) {
         var mtg = {...meetingInitialState};
 
         meetings.forEach(meeting => {
-        if (itemId && itemId.itemId === meeting.id) {
+        if (itemId === meeting.id) {
             console.log("getMeeting: found it!");
             useUpdate=true;
             mtg = {...meeting};
@@ -89,11 +88,13 @@ const MeetingData = (itemId) => {
     }
 
     function preFillForm(itemId) {
+        console.log("preFillForm", itemId)
+
         if (!prefill) {
             console.log("SKIP prefill")
             return
         }
-        const mtg = getMeeting(itemId);
+        const mtg = getMeeting(itemId, meetings);
         meetingState.id = mtg.id;
         meetingState.name = mtg.name;
         meetingState.description = mtg.description;
@@ -120,6 +121,7 @@ const MeetingData = (itemId) => {
             setMeetings([...meetings, meeting]);
             clearState();
             await API.graphql(graphqlOperation(createMeeting, {input: meeting}));
+            updateMeetingsList();
         } catch (err) {
             console.log('error creating meeting:', err)
         }
@@ -134,6 +136,7 @@ const MeetingData = (itemId) => {
             setMeetings([...meetings, meeting]);
             clearState();
             await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
+            updateMeetingsList();
         } catch (err) {
             console.log('error updating meeting:', err)
         }
@@ -202,7 +205,8 @@ return (
 }
 
 MeetingData.propTypes = {
-    itemId: PropTypes.string
+    itemId: PropTypes.string,
+    updateMeetingsList: PropTypes.func,
 }
 
 const styles = {

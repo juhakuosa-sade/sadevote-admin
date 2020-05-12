@@ -6,6 +6,7 @@ import { API, graphqlOperation } from 'aws-amplify'
 import { listMeetings } from '../graphql/queries'
 import MeetingData from './MeetingsData';
 import { setSelectedMeeting } from '../App';
+import { deleteMeeting } from '../graphql/mutations'
 
 
 const initState = {
@@ -20,43 +21,40 @@ const MeetingsList = () => {
     const fState = initState ;
     const [uiState, setState] = useState(initState);
 
+    console.log("fetchcount", fetch);
+
     useEffect(() => {
         fetchMeetings();
     }, [])
 
-    /*
-    const metgs = { 
-        id: '',
-        name: '', 
-        description: '',
-        admins:  [...''],
-        users:  [...''],
-        topics:  [...'']
+    function updateFetch() {
+        console.log("updateFetch()")
+        fetchMeetings();
     }
-   
-    function createDummyList() {  
-        var newmtgs = []
-        for (var index = 0; index <5; index++ ) {
-            const mtg = { metgs };
-            mtg.id = generateId();
-            mtg.name = 'meeting ' + index;
-            mtg.description = 'meeting description ' + index;
-            newmtgs.push(mtg);
-            console.log("SIZE", newmtgs.length)
-        }
-        return newmtgs;
-    }
-    */
-    
+        
     async function fetchMeetings() {
+        console.log("fetchMeetings()")
+
         try {
             const meetingData = await API.graphql(graphqlOperation(listMeetings))
             const meetings = meetingData.data.listMeetings.items
             setMeetings(meetings)
         } catch (err) { console.log('error fetching meetings') }
-        finally {
-         //   setMeetings(createDummyList());
+    
+    }
+
+    async function delMeeting(id)  {
+        console.log('deleting meeting:', id);
+        const mtg = {
+            id: id,
+          };
+        try {
+            await API.graphql(graphqlOperation(deleteMeeting, {input: mtg}));
+            updateFetch();
+        } catch (err) {
+            console.log('error deleting meeting:', err)
         }
+        return false;
     }
 
     const driveRendering = ({mode, param, doit}) => {
@@ -96,6 +94,18 @@ const MeetingsList = () => {
 
     }
 
+    const handleDelete = (event) => {
+        let id = event.target.getAttribute('id');
+
+        fState.renderSelect="DELETE";
+        fState.editParam=id;
+        fState.doRender=true;
+
+        driveRendering("DELETE", id, true);
+
+        console.log("handleDelete", id);
+    }
+
     const handleCreate = (event) => {
 
         fState.renderSelect="CREATE";
@@ -107,12 +117,6 @@ const MeetingsList = () => {
         console.log("handleCreate:", fState.renderSelect, fState.editParam, fState.doRender);
     }
     
-    
-    const handleDelete = (event) => {
-        let id = event.target.getAttribute('id');
-        console.log("delete item", id);
-    }
-
     function resetRenderSelection() {
         const param = fState.editParam;
         fState.renderSelect="LIST";
@@ -182,19 +186,34 @@ else if (fState.renderSelect === "EDIT") {
     const selected = resetRenderSelection(); 
     return (
     <div style={styles.container}>
-        <MeetingData itemId = {selected} />  
+        <MeetingData itemId = {selected} updateMeetingsList = {updateFetch}/>  
     </div>
     )
 }
 
-else // (renderSelect == "CREATE") {
+else if (fState.renderSelect === "DELETE") {
+    const selected = resetRenderSelection(); 
+    const mtg = delMeeting(selected);
+
+    var res = "";
+
+    if (!mtg) res= "Deleting meeting " + selected + " failed.";
+    else res = "Meeting " + selected + " deleted.";    
+    
+    return (
+        <h4>{res}</h4>        
+    )
+}
+
+else /* if (fState.renderSelect == "CREATE") */ {
     resetRenderSelection();
     return (
     <div style={styles.container}>
-        <MeetingData />  
+        <MeetingData updateMeetingsList = {updateFetch} />  
     </div>
     )
     
+}
 }
 
 const styles = {
