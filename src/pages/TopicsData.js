@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import PropTypes from 'prop-types';
 import CatInputs from './CatInputs';
 
 import '../App.css';
@@ -33,7 +34,10 @@ const votingOptionInitialState = {
     unanimously_selected: false,
 }
 
-const TopicsData = () => {
+var prefill = true;
+var useUpdate = false;
+
+const TopicsData = ({itemId, updateTopicsList}) => {
 
 /** Cat */
     const blankCat = { catNumber: '', catText: '' };
@@ -98,10 +102,64 @@ const TopicsData = () => {
 
     useEffect(() => {
         fetchTopics()
-    }, [])
+    }, []);
+
+    useEffect(() => { 
+        // do after mounting   
+            enablePrefill();
+            setTopicState({...topicInitialState});
+        // do before unmounting
+        return () => {
+            restoreState();
+        };
+      }, []); // passing empty array means do only once (https://reactjs.org/docs/hooks-effect.html)
+
+
 
     function setInput(key, value) {
         setTopicState({ ...topicState, [key]: value })
+    }
+
+    if (itemId) {
+        preFillForm(itemId, topics);
+    }
+
+    function restoreState() {
+        prefill = true;
+        useUpdate=false;
+    }
+    
+    function getTopic(itemId, topics) {
+        var tpc = {...topicInitialState};
+
+        topics.forEach(topic => {
+        if (itemId === topic.id) {
+            console.log("getTopic: found it!");
+            useUpdate=true;
+            tpc = {...topic};
+        }
+        });
+        
+        return tpc;
+    }
+
+    function preFillForm(itemId) {
+        console.log("preFillForm", itemId)
+
+        if (!prefill) {
+            console.log("SKIP prefill")
+            return
+        }
+        const tpc = getTopic(itemId, topics);
+        topicState.id = tpc.id;
+        topicState.topic_number = tpc.topic_number;
+        topicState.topic_title = tpc.topic_title;
+        topicState.topic_text = tpc.topic_text;
+        topicState.voting_options = tpc.voting_options;
+        topicState.voting_options_count = tpc.voting_options_count;
+        topicState.active = tpc.active;
+        topicState.voting_percentage = tpc.voting_percentage;
+        console.log("preFillForm", topicState);
     }
 
     function clearState() {
@@ -147,16 +205,23 @@ const TopicsData = () => {
 
         topic.voting_options_count = index;
         setTopics([...topics, topic]);
-        await API.graphql(graphqlOperation(createTopic, {input: topic}));
-        
         addTopicToList(topic.id);
-
         clearState();
-
-        } catch (err) {
+        await API.graphql(graphqlOperation(createTopic, {input: topic}));
+        updateTopicsList();
+    } catch (err) {
             console.log('error creating topic:', err);
         }
     }
+
+    function disablePrefill() {
+        prefill = false;
+    }
+
+    function enablePrefill() {
+        prefill = true;
+    }
+    
 
 /** UI */
     return(   
@@ -216,6 +281,12 @@ const TopicsData = () => {
         </div>
         )    
 }
+
+TopicsData.propTypes = {
+    itemId: PropTypes.string,
+    updateMeetingsList: PropTypes.func,
+}
+
 
 const styles = {
     container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 5 },

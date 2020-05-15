@@ -12,7 +12,8 @@ import '@aws-amplify/ui/dist/style.css';
 
 import Home from "./pages/Home";
 import UsersData from "./pages/UsersData";
-import TopicsData from "./pages/TopicsData";
+//import TopicsData from "./pages/TopicsData";
+import TopicsList from "./pages/TopicsList";
 import TodoData from "./pages/TodoData";
 import MeetingsList from "./pages/MeetingsList";
 
@@ -33,19 +34,22 @@ export function generateId() {
 }
 
 
-const mtg = {
+const selectedMeeting = {
     id : "",
     name : "",
     description : ''
 }
 
 export function setSelectedMeeting(id, name, description) {
-    mtg.id=id;
-    mtg.name=name;
-    mtg.description=description;
-    console.log("SELECTED MTG", mtg.id, mtg.name, mtg.description);
+    selectedMeeting.id=id;
+    selectedMeeting.name=name;
+    selectedMeeting.description=description;
+    console.log("SELECTED MTG", selectedMeeting.id, selectedMeeting.name, selectedMeeting.description);
 }
 
+export function getSelectedMeeting() {
+    return selectedMeeting;
+}
   
 /**
  * Class App
@@ -122,8 +126,8 @@ class App extends Component {
                     <div style={styles.container}>
                         <div style={styles.status}>
                             { 
-                            mtg.id 
-                                ? <div> Selected meeting: { mtg.name } ({ mtg.id }) </div> 
+                            selectedMeeting.id 
+                                ? <div> Selected meeting: { selectedMeeting.name } ({ selectedMeeting.id }) </div> 
                                 : <div></div>
                             } 
                         </div>
@@ -138,7 +142,7 @@ class App extends Component {
                                 <Switch>
                                     <Route exact path={pageHome} component={Home} />
                                     <Route path={pageUsers} component={UsersData} />
-                                    <Route path={pageTopics} component={TopicsData} />
+                                    <Route path={pageTopics} component={TopicsList} />
                                     <Route path={pageTodos} component={TodoData} />
                                     <Route path={pageMeetings} component={MeetingsList} />
                                 </Switch>
