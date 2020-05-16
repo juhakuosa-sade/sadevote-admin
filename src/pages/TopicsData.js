@@ -3,12 +3,15 @@ import PropTypes from 'prop-types';
 import CatInputs from './CatInputs';
 
 import '../App.css';
-import { generateId } from '../App'
+import { generateId, getSelectedMeeting } from '../App'
+import { getListedTopics } from './TopicsList'
+
 import { addTopicToList } from './MeetingsData'
 
 import { API, graphqlOperation } from 'aws-amplify'
-import { listTopics } from '../graphql/queries'
-import { createTopic } from '../graphql/mutations'
+import { listTopics, getMeeting } from '../graphql/queries'
+
+import { createTopic, updateTopic, updateMeeting } from '../graphql/mutations'
 import { createVotingOption } from '../graphql/mutations'
 //import { listVotingOptions } from '../graphql/queries'
 
@@ -38,6 +41,20 @@ var prefill = true;
 var useUpdate = false;
 
 const TopicsData = ({itemId, updateTopicsList}) => {
+    const selectedMeeting = getSelectedMeeting();
+    var listedTopics = getListedTopics();
+    console.log("listedTopics get", listedTopics)
+
+    async function updateMeetingData(id) {
+        try {
+            const mtg = await API.graphql(graphqlOperation(getMeeting, {id: selectedMeeting.id}));
+            let meeting = {...mtg.data.getMeeting}
+            listedTopics = [...listedTopics, topicState.id];
+            meeting.topics = [...listedTopics];
+            console.log('updateMeetingData:', meeting)
+            await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
+        } catch (err) { console.log('error updating meeting:', err) }
+    }
 
 /** Cat */
     const blankCat = { catNumber: '', catText: '' };
@@ -94,6 +111,11 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         votingOptionToAdd.option_text = catState[idx].catText;
         votingOptionToAdd.votes = 0;
         votingOptionToAdd.unanimously_selected = false;
+    }
+
+    function prefillVotingOptions(votingOptions) {
+        console.log("prefillVotingOptions", votingOptions);
+        
     }
 
 /** Topics */
@@ -160,6 +182,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         topicState.active = tpc.active;
         topicState.voting_percentage = tpc.voting_percentage;
         console.log("preFillForm", topicState);
+        prefillVotingOptions(topicState.voting_options);
     }
 
     function clearState() {
@@ -185,8 +208,8 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             return
         }
         const topic = { ...topicState }
-        console.log("addTopic:creating topic:", topic)
-        console.log("addTopic:catState", {...catState});
+        //console.log("addTopic:creating topic:", topic)
+        //console.log("addTopic:catState", {...catState});
         
         let index = 0;
         catState.forEach(element => 
@@ -194,21 +217,64 @@ const TopicsData = ({itemId, updateTopicsList}) => {
                 console.log("foreach: ", index, element.catNumber, element.catText);
                 if ((element.catNumber>0) && (element.catText.length>0)) {
                     composeVotingOption(index++);
-//                    topic.votingOptions[index++] = votingOptionToAdd.id;
                     addVotingOption();          
                 }
                 else {
                     console.log("foreach skipping: ", index, element.catNumber, element.catText);
                 }
-                // empty fields are db errors and cause exceptions      
             })
 
         topic.voting_options_count = index;
+        setTopicState({ ...topic});
         setTopics([...topics, topic]);
         addTopicToList(topic.id);
-        clearState();
+
         await API.graphql(graphqlOperation(createTopic, {input: topic}));
+
         updateTopicsList();
+        updateMeetingData(topic.id);
+        
+        clearState();
+        
+    } catch (err) {
+            console.log('error creating topic:', err);
+        }
+    }
+
+    async function updTopic() {
+        try {
+        if (!topicState.id || !topicState.topic_number) {
+            console.log('error creating topic: ID = ',topicState.id);
+            console.log('error creating topic: title = ',topicState.topic_title);
+            return
+        }
+        const topic = { ...topicState }
+        //console.log("updTopic:creating topic:", topic)
+        //console.log("updTopic:catState", {...catState});
+        
+        let index = 0;
+        catState.forEach(element => 
+            {
+                console.log("foreach: ", index, element.catNumber, element.catText);
+                if ((element.catNumber>0) && (element.catText.length>0)) {
+                    composeVotingOption(index++);
+                    addVotingOption();          
+                }
+                else {
+                    console.log("foreach skipping: ", index, element.catNumber, element.catText);
+                }
+            })
+
+        topic.voting_options_count = index;
+        setTopicState({ ...topic});
+        setTopics([...topics, topic]);
+        addTopicToList(topic.id);
+
+        await API.graphql(graphqlOperation(updateTopic, {input: topic}));
+
+        updateTopicsList();
+        clearState();
+
     } catch (err) {
             console.log('error creating topic:', err);
         }
@@ -228,6 +294,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         <div style={styles.container}>
             <h3>Topics</h3>
             <input
+                onFocus={disablePrefill}
                 onChange={event => setInput('id', event.target.value)}
                 style={styles.inputDisabled}
                 value={topicState.id}
@@ -236,18 +303,21 @@ const TopicsData = ({itemId, updateTopicsList}) => {
                 hidden={false}
             />
             <input
+                onFocus={disablePrefill}                
                 onChange={event => setInput('topic_number', event.target.value)}
                 style={styles.input}
                 value={topicState.topic_number}
                 placeholder="Topic number"
             />
             <input
+                onFocus={disablePrefill}
                 onChange={event => setInput('topic_title', event.target.value)}
                 style={styles.input}
                 value={topicState.topic_title}
                 placeholder="Title"
             />
             <textarea
+                onFocus={disablePrefill}
                 onChange={event => setInput('topic_text', event.target.value)}
                 rows={10} 
                 style={styles.input}
@@ -268,23 +338,21 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             ))
             }
                 
-            <button style={styles.button2} onClick={addTopic}>Create Topic</button>
-            {
-                topics.map((topic, index) => (
-                    <div key={topic.id ? topic.id : index} style={styles.topic}>
-                        <p style={styles.topicName}>{topic.id} {topic.topic_number} {topic.topic_title}</p>
-                        <p style={styles.topicDescription}>{topic.topic_text}</p>
-                        <p style={styles.topicDescription}>{topic.voting_options}</p>
-                    </div>
-                ))
-            }
+                {
+        useUpdate
+        ?
+        <button style={styles.button} onClick={updTopic}>Update Topic</button>
+        :
+        <button style={styles.button} onClick={addTopic}>Create Topic</button>
+        }
+        
         </div>
         )    
 }
 
 TopicsData.propTypes = {
     itemId: PropTypes.string,
-    updateMeetingsList: PropTypes.func,
+    updateTopicsList: PropTypes.func,
 }
 
 

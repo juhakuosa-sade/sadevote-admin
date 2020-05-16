@@ -14,8 +14,15 @@ import { deleteTopic } from '../graphql/mutations'
 const initState = {
     renderSelect : "LIST",
     editParam : "",
-    doRender : false
+    doRender : false,
+    doFetch : false
 };
+
+var listedTopics = [...''];
+export function getListedTopics() {
+    console.log("listedTopics", listedTopics)
+    return [...listedTopics]
+}
 
 const TopicsList = () => {
 
@@ -24,19 +31,34 @@ const TopicsList = () => {
     const [uiState, setState] = useState(initState);
     const selectedMeeting = getSelectedMeeting();
 
-    useEffect(() => {
-        fetchTopics()
-    }, []);
-
+    useEffect(() => 
+    { 
+        setState({doFetch : true});
+    }, [])
+    
+   
     function updateFetch() {
-        console.log("updateFetch()")
         fetchTopics();
     }
-     
+
+    function updateFetchDelayed() {
+        fetchTopics();
+        setTimeout(() => {
+            fetchTopics(); 
+        }, 3000);
+    }
+
     var topicIdList = [...''];
 
+    if (uiState.doFetch) 
+    { 
+        fetchTopics(); 
+        setState({doFetch : false}); 
+    }
+
     async function fetchTopics() {
-       
+        console.log('fetchTopics')
+        
         try {
             const meeting = await API.graphql(graphqlOperation(getMeeting, {id: selectedMeeting.id}));
             topicIdList = [...meeting.data.getMeeting.topics]
@@ -47,11 +69,17 @@ const TopicsList = () => {
             var filteredTopics = [...''];
             topicIdList.forEach(element => {
                 topics.forEach(topic => {
-                    if (element === topic.id) filteredTopics = [...filteredTopics, topic]
+                    if (element === topic.id) {
+                        filteredTopics = [...filteredTopics, topic]
+                    }
                 });
              });
 
             setTopics(filteredTopics)
+            listedTopics = [];
+            filteredTopics.forEach(element => {
+                listedTopics = [...listedTopics, element.id]
+            });
 
         } catch (err) { console.log('error fetching topics') }
     
@@ -76,6 +104,7 @@ const TopicsList = () => {
         setState({renderSelect: mode});
         setState({editParam : param});
         setState({doRender : doit});
+
         console.log("Rendering for", uiState.renderSelect);
     }
 
@@ -153,7 +182,7 @@ else if (fState.renderSelect === "EDIT") {
     const selected = resetRenderSelection(); 
     return (
     <div style={styles.container}>
-        <TopicData itemId = {selected} updateTopicsList = {updateFetch}/>  
+        <TopicData itemId = {selected} updateTopicsList = {updateFetch} />  
     </div>
     )
 }
@@ -174,9 +203,10 @@ else if (fState.renderSelect === "DELETE") {
 
 else /* if (fState.renderSelect === "CREATE") */ {
     resetRenderSelection();
+
     return (
     <div style={styles.container}>
-        <TopicData updateTopicsList = {updateFetch} />  
+        <TopicData updateTopicsList = {updateFetchDelayed} />  
     </div>
     )
     

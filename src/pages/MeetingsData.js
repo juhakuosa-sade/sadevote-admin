@@ -29,11 +29,19 @@ export function addUserToList(id) {
     console.log("addUserToList", id);
 }
 
+export function getTopicList() {
+    return topicList;
+}
+
+export function getUserList() {
+    return userList;
+}
+
+
 var prefill = true;
 var useUpdate = false;
 
 const MeetingData = ({itemId, updateMeetingsList}) => {
-//const MeetingData = (itemId) => {
     const [meetingState, setMeetingState] = useState(meetingInitialState);
     const [meetings, setMeetings] = useState([]);
 
