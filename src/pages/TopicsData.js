@@ -6,14 +6,11 @@ import '../App.css';
 import { generateId, getSelectedMeeting } from '../App'
 import { getListedTopics } from './TopicsList'
 
-import { addTopicToList } from './MeetingsData'
-
 import { API, graphqlOperation } from 'aws-amplify'
-import { listTopics, getMeeting } from '../graphql/queries'
+import { listTopics, getMeeting, listVotingOptions } from '../graphql/queries'
 
-import { createTopic, updateTopic, updateMeeting } from '../graphql/mutations'
+import { createTopic, updateTopic, updateMeeting, updateVotingOption } from '../graphql/mutations'
 import { createVotingOption } from '../graphql/mutations'
-//import { listVotingOptions } from '../graphql/queries'
 
 
 const topicInitialState = {
@@ -37,13 +34,10 @@ const votingOptionInitialState = {
     unanimously_selected: false,
 }
 
-var prefill = true;
-var useUpdate = false;
-
 const TopicsData = ({itemId, updateTopicsList}) => {
+    
     const selectedMeeting = getSelectedMeeting();
     var listedTopics = getListedTopics();
-    console.log("listedTopics get", listedTopics)
 
     async function updateMeetingData(id) {
         try {
@@ -57,18 +51,23 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     }
 
 /** Cat */
-    const blankCat = { catNumber: '', catText: '' };
-    const [catState, setCatState] = useState([
-        { ...blankCat },
-    ]);
+    const blankCat = { votingOptionId: '', catNumber: '', catText: '' };
+    const [catState, setCatState] = useState([]);
 
     function clearCatState() {
-        setCatState([{ ...blankCat }]);
+        setCatState([]);
     };
 
-    const addCat = () => {
-        setCatState([...catState, { ...blankCat }]);
+    const addBlankCat = () => {
+        var cat = { ...blankCat };
+        cat.catNumber = catState.length + 1;
+        setCatState([...catState, { ...cat }]);
     };
+
+    const setCats = (cats) => {
+        setCatState([...cats]);
+    };
+
 
     const handleCatChange = (e) => {
         const updatedCats = [...catState];
@@ -80,14 +79,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
 
 /** Voting options */
     const votingOptionToAdd = { ...votingOptionInitialState }
-/*
-    async function fetchVotingOptions() {
-        try {
-            const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions))
-            const votingOptions = votingOptionData.data.listVotingOptions.items
-        } catch (err) { console.log('error fetching votingOptions') }
-    }
-*/
+
     async function addVotingOption() {
         try {
             if (!(votingOptionToAdd.id)) {
@@ -103,29 +95,53 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         }
     }
 
-    function composeVotingOption(idx) {
+    async function updVotingOption() {
+        try {
+            if (!(votingOptionToAdd.id)) {
+                console.log('error creating votingOption: ID = ',votingOptionToAdd.id);
+                console.log('error creating votingOption: text = ',votingOptionToAdd.option_text);
+                return
+            }
+            const votingOption = { ...votingOptionToAdd }
+            console.log('updating votingOption:', votingOption)
+            await API.graphql(graphqlOperation(updateVotingOption, {input: votingOption}))
+        } catch (err) {
+            console.log('error updating votingOption:', err)
+        }
+    }
+    function composeNewVotingOption(idx) {
         votingOptionToAdd.topic_id = topicState.id; 
         votingOptionToAdd.topic_number = topicState.topic_number; 
-        votingOptionToAdd.id = topicState.id + '-' + topicState.topic_number + '-' + catState[idx].catNumber;
+        votingOptionToAdd.id = generateId();
         votingOptionToAdd.option_number = catState[idx].catNumber;
         votingOptionToAdd.option_text = catState[idx].catText;
         votingOptionToAdd.votes = 0;
         votingOptionToAdd.unanimously_selected = false;
     }
 
-    function prefillVotingOptions(votingOptions) {
-        console.log("prefillVotingOptions", votingOptions);
-        
+    function composeOldVotingOption(idx, id) {
+        votingOptionToAdd.topic_id = topicState.id; 
+        votingOptionToAdd.topic_number = topicState.topic_number; 
+        votingOptionToAdd.id = id;
+        votingOptionToAdd.option_number = catState[idx].catNumber;
+        votingOptionToAdd.option_text = catState[idx].catText;
+        votingOptionToAdd.votes = 0;
+        votingOptionToAdd.unanimously_selected = false;
     }
 
 /** Topics */
     const [topicState, setTopicState] = useState(topicInitialState)
     const [topics, setTopics] = useState([])
+    const [votingOptions, setVotingOptions] = useState([])
+    const [usePrefill, setUsePrefill] = useState(false);
+    const [useUpdate, setUseUpdate] = useState(false);
 
+    /***** FETCH DATA *****/
     useEffect(() => {
         fetchTopics()
     }, []);
 
+    /***** ON START, ON STOP *****/
     useEffect(() => { 
         // do after mounting   
             enablePrefill();
@@ -136,55 +152,70 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         };
       }, []); // passing empty array means do only once (https://reactjs.org/docs/hooks-effect.html)
 
+    /***** PREFILL TOPIC FIELDS *****/
+    useEffect(() => {
+        function preFillForm(itemId) {
+            console.log("preFillForm", itemId)
+            var tpc = {...topicInitialState};
+            topics.forEach(topic => {
+            if (itemId === topic.id) {
+                console.log("preFillForm: found it!", topic);
+                setUseUpdate(true);
+                tpc = {...topic};
+            }
+            });
+            setTopicState({...tpc});
+
+        };
 
 
-    function setInput(key, value) {
-        setTopicState({ ...topicState, [key]: value })
-    }
+        if (usePrefill && itemId) {
+            preFillForm(itemId);
+        }
+    }, [itemId, topics, usePrefill]);
 
-    if (itemId) {
-        preFillForm(itemId, topics);
-    }
+    /***** PREFILL VOTING OPTION FIELDS *****/
+    useEffect(() => {
+
+        const idArray = topicState.voting_options;
+        console.log("idArray length: ", idArray.length);
+
+        const fetchData = async () => {
+
+            //create filter for fetching the needed voting options
+            const filter = {or: []}
+            idArray.forEach(element => {
+                const criteria = {eq: element};
+                const query = {id: criteria};
+                filter.or = [...filter.or, query];
+            });  
+            console.log("FILTER: ", filter);
+    
+            //fetch the needed voting options
+            const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter}))
+            const votingOptions = votingOptionData.data.listVotingOptions.items
+            setVotingOptions([...votingOptions])
+       
+            console.log("prefillVotingOptions", votingOptions);
+            var cats = [];
+            votingOptions.forEach(element => {
+                const cat = { votingOptionId: element.id, catNumber: element.option_number, catText: element.option_text };
+                cats = [...cats, {...cat}]
+            });
+            setCats(cats);
+        };
+       
+        if (idArray.length>0) { //attempt to fetch with empty filter will cause DynamoDB error
+            fetchData();
+        }
+        
+    }, [topicState.voting_options]);
 
     function restoreState() {
-        prefill = true;
-        useUpdate=false;
+        setUsePrefill(true);
+        setUseUpdate(false);
     }
     
-    function getTopic(itemId, topics) {
-        var tpc = {...topicInitialState};
-
-        topics.forEach(topic => {
-        if (itemId === topic.id) {
-            console.log("getTopic: found it!");
-            useUpdate=true;
-            tpc = {...topic};
-        }
-        });
-        
-        return tpc;
-    }
-
-    function preFillForm(itemId) {
-        console.log("preFillForm", itemId)
-
-        if (!prefill) {
-            console.log("SKIP prefill")
-            return
-        }
-        const tpc = getTopic(itemId, topics);
-        topicState.id = tpc.id;
-        topicState.topic_number = tpc.topic_number;
-        topicState.topic_title = tpc.topic_title;
-        topicState.topic_text = tpc.topic_text;
-        topicState.voting_options = tpc.voting_options;
-        topicState.voting_options_count = tpc.voting_options_count;
-        topicState.active = tpc.active;
-        topicState.voting_percentage = tpc.voting_percentage;
-        console.log("preFillForm", topicState);
-        prefillVotingOptions(topicState.voting_options);
-    }
-
     function clearState() {
         topicInitialState.id = generateId();
         clearCatState();
@@ -197,6 +228,8 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             const topicData = await API.graphql(graphqlOperation(listTopics))
             const topics = topicData.data.listTopics.items
             setTopics(topics)
+            //console.log("ZZZ fetchTopics2: ", topics);
+
         } catch (err) { console.log('error fetching topics') }
     }
 
@@ -208,26 +241,22 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             return
         }
         const topic = { ...topicState }
-        //console.log("addTopic:creating topic:", topic)
-        //console.log("addTopic:catState", {...catState});
         
         let index = 0;
+        topic.voting_options = [];
         catState.forEach(element => 
             {
                 console.log("foreach: ", index, element.catNumber, element.catText);
                 if ((element.catNumber>0) && (element.catText.length>0)) {
-                    composeVotingOption(index++);
-                    addVotingOption();          
-                }
-                else {
-                    console.log("foreach skipping: ", index, element.catNumber, element.catText);
+                    composeNewVotingOption(index++);
+                    topic.voting_options = [...topic.voting_options, votingOptionToAdd.id]
+                    addVotingOption();
                 }
             })
 
         topic.voting_options_count = index;
         setTopicState({ ...topic});
         setTopics([...topics, topic]);
-        addTopicToList(topic.id);
 
         await API.graphql(graphqlOperation(createTopic, {input: topic}));
 
@@ -236,7 +265,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         
         clearState();
         
-    } catch (err) {
+        } catch (err) {
             console.log('error creating topic:', err);
         }
     }
@@ -249,16 +278,23 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             return
         }
         const topic = { ...topicState }
-        //console.log("updTopic:creating topic:", topic)
-        //console.log("updTopic:catState", {...catState});
         
         let index = 0;
+        topic.voting_options = [];
         catState.forEach(element => 
             {
                 console.log("foreach: ", index, element.catNumber, element.catText);
                 if ((element.catNumber>0) && (element.catText.length>0)) {
-                    composeVotingOption(index++);
-                    addVotingOption();          
+                    if (element.votingOptionId) {
+                        composeOldVotingOption(index++, element.votingOptionId);
+                        topic.voting_options = [...topic.voting_options, element.votingOptionId];
+                        updVotingOption();
+                    }
+                    else {
+                        composeNewVotingOption(index++);
+                        topic.voting_options = [...topic.voting_options, votingOptionToAdd.id]
+                        addVotingOption();
+                    } 
                 }
                 else {
                     console.log("foreach skipping: ", index, element.catNumber, element.catText);
@@ -268,7 +304,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         topic.voting_options_count = index;
         setTopicState({ ...topic});
         setTopics([...topics, topic]);
-        addTopicToList(topic.id);
 
         await API.graphql(graphqlOperation(updateTopic, {input: topic}));
 
@@ -281,18 +316,56 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     }
 
     function disablePrefill() {
-        prefill = false;
+        setUsePrefill(false);
     }
 
     function enablePrefill() {
-        prefill = true;
+        setUsePrefill(true);
     }
-    
+
+    const handleDelete = (event) => {
+        let id = event.target.getAttribute('id'); 
+        let num = event.target.getAttribute('num'); 
+        console.log("handleDelete", id);
+
+        if (id === '') {
+            console.log("handleDelete CAT1:", num, parseInt(num));
+            //const cats = [...catState.filter(item => item.catNumber !== num)];
+            const cats = catState.filter(item => item.catNumber !== parseInt(num));
+            console.log("handleDelete CAT3", cats);
+            setCats(cats);
+        }
+
+        const topic = { ...topicState }
+        if (topic.voting_options_count === 1) {
+            topic.voting_options = [];
+            clearCatState();
+        }
+        else {
+            topic.voting_options = topic.voting_options.filter(item => item !== id);
+            topic.voting_options_count = topic.voting_options.length;
+        }
+        setTopicState({ ...topic});
+
+        console.log("handleDelete catState", catState);
+        console.log("handleDelete votingOptions", votingOptions);
+        console.log("handleDelete topicState.voting_options", topicState.voting_options);
+
+
+    }
 
 /** UI */
+
+    function setInput(key, value) {
+        setTopicState({ ...topicState, [key]: value })
+    }
+
     return(   
+        /*isLoading ? (
+            <div>Loading ...</div>
+          ) : (*/
         <div style={styles.container}>
-            <h3>Topics</h3>
+            <h3>Topic</h3>
             <input
                 onFocus={disablePrefill}
                 onChange={event => setInput('id', event.target.value)}
@@ -324,30 +397,39 @@ const TopicsData = ({itemId, updateTopicsList}) => {
                 value={topicState.topic_text}
                 placeholder="Text"
             />
-        
-            <button style={styles.button} onClick={addCat}>Add voting option</button> 
-            {
+            
+            <h5>Voting options</h5>
+           {
             catState.map((val, idx) => (
-                <CatInputs
-                    style={styles.input}
-                    key={`cat-${idx}`}
-                    idx={idx}
-                    catState={catState}
-                    handleCatChange={handleCatChange}
-                />
+                <div key={"containerBox" + idx} style={styles.rowcontainer}>
+                    <CatInputs
+                        onFocus={disablePrefill}
+                        style={styles.input3}
+                        key={`cat-${idx}`}
+                        idx={idx}
+                        catState={catState}
+                        handleCatChange={handleCatChange}
+                    />
+                    <button style={styles.button2} id={val.votingOptionId} num={val.catNumber} 
+                        onClick={handleDelete}>Delete</button>
+                </div>
+
             ))
             }
+             <button style={styles.button} onFocus={disablePrefill} onClick={addBlankCat}>Add voting option</button> 
+            
                 
-                {
-        useUpdate
-        ?
-        <button style={styles.button} onClick={updTopic}>Update Topic</button>
-        :
-        <button style={styles.button} onClick={addTopic}>Create Topic</button>
-        }
+            {
+            useUpdate
+            ?
+            <button style={styles.button} onClick={updTopic}>Update Topic</button>
+            :
+            <button style={styles.button} onClick={addTopic}>Create Topic</button>
+            }
         
         </div>
-        )    
+       /* )  */
+    )  
 }
 
 TopicsData.propTypes = {
@@ -358,14 +440,12 @@ TopicsData.propTypes = {
 
 const styles = {
     container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 5 },
-    topic: {  fontSize: 12, marginBottom: 15 },
-    input: { border: 'none', backgroundColor: '#ddd', marginBottom: 10, padding: 8, fontSize: 12 },
-    inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 10, padding: 8, fontSize: 12 },
-    input2: { border: 'none', backgroundColor: '#ddd', marginBottom: 20, padding: 20, fontSize: 12 },
-    topicName: { fontSize: 12, fontWeight: 'bold' },
-    topicDescription: { fontSize: 12, marginBottom: 0 },
-    button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginBottom: 10, padding: '12px 0px' },
-    button2: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginTop: 10, marginBottom: 10, padding: '12px 0px' }
+    rowcontainer: { alignItems: 'right', color: 'black', backgroundColor:'#ddd', width: 396, margin: '0 0', display: 'flex', flexDirection: 'row', padding: 2 },
+    input: { border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 12 },
+    inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 2, padding: 8, fontSize: 12 },
+    input3: { border: 'none', backgroundColor: 'white', marginBottom: 0, padding: 8, fontSize: 12 },
+    button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginTop: 2, marginBottom: 8, padding: '12px 0px' },
+    button2: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginTop: 0, marginBottom: 0, padding: '10 8' }
 }
 
 export default TopicsData;

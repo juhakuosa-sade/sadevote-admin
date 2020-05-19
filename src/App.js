@@ -11,17 +11,16 @@ import '@aws-amplify/ui/dist/style.css';
 
 
 import Home from "./pages/Home";
+import MeetingsList from "./pages/MeetingsList";
 import UsersData from "./pages/UsersData";
-//import TopicsData from "./pages/TopicsData";
 import TopicsList from "./pages/TopicsList";
 import TodoData from "./pages/TodoData";
-import MeetingsList from "./pages/MeetingsList";
 
 const pageHome='/';
-const pageUsers='/users'
-const pageTopics='/topics'
-const pageTodos='/todos';
 const pageMeetings='/meetings';
+const pageTopics='/topics'
+const pageUsers='/users'
+const pageTodos='/todos';
 
 
 export function signOut() {
@@ -37,13 +36,16 @@ export function generateId() {
 const selectedMeeting = {
     id : "",
     name : "",
-    description : ''
+    description : '',
+    selected: false
 }
 
 export function setSelectedMeeting(id, name, description) {
     selectedMeeting.id=id;
     selectedMeeting.name=name;
     selectedMeeting.description=description;
+    selectedMeeting.selected=true;
+
     console.log("SELECTED MTG", selectedMeeting.id, selectedMeeting.name, selectedMeeting.description);
 }
 
@@ -62,15 +64,21 @@ class App extends Component {
         this.state = {
             toPage: pageHome,
             showWait: false,
+            contentButtonsDisabled: false 
         }
 
         this.goPage = this.goPage.bind(this);
         this.goHome = this.goHome.bind(this);
-        this.goUsers = this.goUsers.bind(this);
-        this.goTopics = this.goTopics.bind(this);
-        this.goTodos = this.goTodos.bind(this);
         this.goMeetings = this.goMeetings.bind(this);
+        this.goTopics = this.goTopics.bind(this);
+        this.goUsers = this.goUsers.bind(this);
+        this.goTodos = this.goTodos.bind(this);
 
+        this.enableContentButtons = this.enableContentButtons.bind(this);
+    }
+
+    enableContentButtons = () => {
+        this.setState({ contentButtonsDisabled: false });
     }
 
     goPage(page) {
@@ -85,25 +93,26 @@ class App extends Component {
         this.goPage(pageHome)
     }
 
-    goUsers() {
-        this.goPage(pageUsers)
+    goMeetings() {
+        this.goPage(pageMeetings)     
     }
 
     goTopics() {
         this.goPage(pageTopics)
     }
 
+    goUsers() {
+        this.goPage(pageUsers)
+    }
+ 
     goTodos() {
         this.goPage(pageTodos)
     }
     
-    goMeetings() {
-        this.goPage(pageMeetings)
-    }
-    
     render () {
-        
+
         return (
+            
             <div className="App">
                 <header className="App-header">
                     <a href="http://sadeinnovations.com">
@@ -114,11 +123,15 @@ class App extends Component {
                     <div style={styles.navcontainer}>
                         <button style={styles.button} onClick={this.goHome}>Home</button>
                         <hr/>
-                        <button style={styles.button} onClick={this.goUsers}>Users</button>
-                        <button style={styles.button} onClick={this.goTopics}>Topics</button>
-                        <button style={styles.button} onClick={this.goTodos}>Todos</button>
-                        <hr/>
                         <button style={styles.button} onClick={this.goMeetings}>Meetings</button> 
+                        <hr/>
+                        <button style={styles.button} 
+                                hidden = {this.state.contentButtonsDisabled}
+                                onClick={this.goTopics}>Topics</button>
+                        <button style={styles.button} 
+                                hidden = {this.state.contentButtonsDisabled} 
+                                onClick={this.goUsers}>Users</button>
+                        <button style={styles.button} onClick={this.goTodos}>Todos</button>
                         <hr/>
                         <button style={styles.button} onClick={() => signOut()}>Sign out</button>  
                         <p/>
@@ -127,9 +140,10 @@ class App extends Component {
                         <div style={styles.status}>
                             { 
                             selectedMeeting.id 
-                                ? <div> Selected meeting: { selectedMeeting.name } ({ selectedMeeting.id }) </div> 
+                                ? <div> Selected meeting: { selectedMeeting.name } ({ selectedMeeting.id }) </div>
                                 : <div></div>
-                            } 
+                            }
+                           
                         </div>
                         <BrowserRouter>
                             <div>
@@ -141,10 +155,10 @@ class App extends Component {
                                 <Redirect to= {this.state.toPage} />
                                 <Switch>
                                     <Route exact path={pageHome} component={Home} />
-                                    <Route path={pageUsers} component={UsersData} />
+                                    <Route path={pageMeetings} component={MeetingsList} cbfn={()=>{this.enableContentButtons()}} />
                                     <Route path={pageTopics} component={TopicsList} />
+                                    <Route path={pageUsers} component={UsersData} />
                                     <Route path={pageTodos} component={TodoData} />
-                                    <Route path={pageMeetings} component={MeetingsList} />
                                 </Switch>
                             </div>
                         </BrowserRouter>
@@ -161,15 +175,22 @@ class App extends Component {
 const styles = {
     navcontainer: { backgroundColor: 'grey', width: 100, margin: '0 0', display: 'flex', flexDirection: 'column', justifyContent: 'left', padding: 5 },
     container: { width: 500, margin: '0 auto', justifyContent: 'center', padding: 10 },
- //   container: { width: 500, margin: '0 auto', display: 'flex', flex: 1, flexDirection: 'column', justifyContent: 'center', padding: 20 },
     button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '8px 0px' },
     status: { color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' },
     info: { justifyContent: 'center', color: 'white', outline: 'none', fontSize: 10, padding: '4px 4px' }
 }
 
-export default withAuthenticator(App)
+export default withAuthenticator(App);
 
-
+/*
+{ 
+(selectedMeeting.selected && this.state.contentButtonsDisabled)
+    ? 
+    this.enableContentButtons()
+    :
+    <div></div>
+}
+*/
 
 // Get the aws resources configuration parameters
 //import awsconfig from './aws-exports'; // if you are using Amplify CLI

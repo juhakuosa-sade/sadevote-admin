@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { API, graphqlOperation } from 'aws-amplify'
 
 import { generateId } from '../App'
-import { addUserToList } from './MeetingsData'
 
 import { createUser } from '../graphql/mutations'
 import { listUsers } from '../graphql/queries'
@@ -47,8 +46,6 @@ const UsersData = () => {
             setUsers([...users, user])
             await API.graphql(graphqlOperation(createUser, {input: user}))
             
-            addUserToList(user.id);
-
             clearState();
 
         } catch (err) {

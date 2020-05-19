@@ -20,7 +20,7 @@ const initState = {
 
 var listedTopics = [...''];
 export function getListedTopics() {
-    console.log("listedTopics", listedTopics)
+    //console.log("listedTopics", listedTopics)
     return [...listedTopics]
 }
 
@@ -101,9 +101,12 @@ const TopicsList = () => {
 
     const driveRendering = ({mode, param, doit}) => {
         /* set some shit to state so that it causes rendering! */
-        setState({renderSelect: mode});
-        setState({editParam : param});
-        setState({doRender : doit});
+        const drive = {
+            renderSelect: mode,
+            editParam : param,
+            doRender : doit
+        }
+        setState(drive)
 
         console.log("Rendering for", uiState.renderSelect);
     }
@@ -216,7 +219,6 @@ else /* if (fState.renderSelect === "CREATE") */ {
 const styles = {
     container: { width: 500, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 0 },
     rowcontainer: { alignItems: 'right', color: 'black', backgroundColor:'#ddd', width: 500, margin: '0 0', display: 'flex', flexDirection: 'row', padding: 5 },
-    topic: { fontSize: 12, marginBottom: 15 },
     topicTitle: { fontSize: 14, fontWeight: 'bold', margin: 0, padding: 0 },
     topicText: { fontSize: 12, margin: 0, padding: 0 },
     button: { width: 100, marginLeft: "auto", backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '8px 0px' },

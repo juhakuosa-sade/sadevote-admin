@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react'
+import PropTypes from 'prop-types';
+
 import '../App.css';
 
 import { API, graphqlOperation } from 'aws-amplify'
@@ -15,7 +17,7 @@ const initState = {
     doRender : false
 };
 
-const MeetingsList = () => {
+const MeetingsList = ({cbfn}) => {
 
     const [meetings, setMeetings] = useState([]);
     const fState = initState ;
@@ -69,6 +71,7 @@ const MeetingsList = () => {
         const desc = event.target.getAttribute('desc');
 
         setSelectedMeeting(id, name, desc);
+        console.log("WTF", cbfn);
 
         fState.renderSelect="EDIT";
         fState.editParam=id;
@@ -85,6 +88,7 @@ const MeetingsList = () => {
         const desc = event.target.getAttribute('desc');
 
         setSelectedMeeting(id, name, desc);
+        console.log("WTF", cbfn);
 
         fState.renderSelect="SELECT";
         fState.editParam=id;
@@ -218,10 +222,13 @@ else /* if (fState.renderSelect === "CREATE") */ {
 }
 }
 
+MeetingsList.propTypes = {
+    cbfn: PropTypes.func
+}
+
 const styles = {
     container: { width: 500, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 0 },
     rowcontainer: { alignItems: 'right', color: 'black', backgroundColor:'#ddd', width: 500, margin: '0 0', display: 'flex', flexDirection: 'row', padding: 5 },
-    meeting: { fontSize: 12, marginBottom: 15 },
     meetingName: { fontSize: 14, fontWeight: 'bold', margin: 0, padding: 0 },
     meetingDescription: { fontSize: 12, margin: 0, padding: 0 },
     button: { width: 100, marginLeft: "auto", backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '8px 0px' },

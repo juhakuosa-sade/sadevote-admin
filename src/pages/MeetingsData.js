@@ -11,39 +11,16 @@ export const meetingInitialState = {
     id: generateId(),
     name: '', 
     description: '',
-    admins:  [...''],
-    users:  [...''],
-    topics:  [...'']
+    admins:  [],
+    users:  [],
+    topics:  []
 }
-
-var topicList = [...''];
-var userList = [...''];
-
-export function addTopicToList(id) {
-    topicList = [...topicList, id];
-    console.log("addTopicToList", id);
-}
-
-export function addUserToList(id) {
-    userList = [...userList, id];
-    console.log("addUserToList", id);
-}
-
-export function getTopicList() {
-    return topicList;
-}
-
-export function getUserList() {
-    return userList;
-}
-
-
-var prefill = true;
-var useUpdate = false;
 
 const MeetingData = ({itemId, updateMeetingsList}) => {
     const [meetingState, setMeetingState] = useState(meetingInitialState);
     const [meetings, setMeetings] = useState([]);
+    const [usePrefill, setUsePrefill] = useState(false);
+    const [useUpdate, setUseUpdate] = useState(false);
 
     useEffect(() => {
        fetchMeetings()
@@ -59,58 +36,33 @@ const MeetingData = ({itemId, updateMeetingsList}) => {
         };
       }, []); // passing empty array means do only once (https://reactjs.org/docs/hooks-effect.html)
 
+    useEffect(() => {
+        function preFillForm(itemId) {
+            console.log("preFillForm", itemId)
+            var mtg = {...meetingInitialState};
+            meetings.forEach(meeting => {
+            if (itemId === meeting.id) {
+                console.log("preFillForm: found it!");
+                setUseUpdate(true);
+                mtg = {...meeting};
+            }
+            });
+            
+            setMeetingState(mtg);
+        }
 
-    if (itemId) {
-        preFillForm(itemId, meetings);
-    }
-
+        if (usePrefill && itemId) {
+            preFillForm(itemId);
+        }
+    }, [itemId, meetings, usePrefill]);
+ 
     function restoreState() {
-        prefill = true;
-        useUpdate=false;
+        setUsePrefill(true);
+        setUseUpdate(false);
     }
 
-    function collectTopics() {
-        meetingState.topics = topicList;
-        console.log("collectTopics:meetingState.topics", meetingState.topics);
-    }
-
-    function collectUsers() {
-        meetingState.users = userList;
-        console.log("collectUsers:meetingState.users", meetingState.users);
-    }
-    
     function setInput(key, value) {
         setMeetingState({ ...meetingState, [key]: value })
-    }
-
-    function getMeeting(itemId, meetings) {
-        var mtg = {...meetingInitialState};
-
-        meetings.forEach(meeting => {
-        if (itemId === meeting.id) {
-            console.log("getMeeting: found it!");
-            useUpdate=true;
-            mtg = {...meeting};
-        }
-        });
-        
-        return mtg;
-    }
-
-    function preFillForm(itemId) {
-        console.log("preFillForm", itemId)
-
-        if (!prefill) {
-            console.log("SKIP prefill")
-            return
-        }
-        const mtg = getMeeting(itemId, meetings);
-        meetingState.id = mtg.id;
-        meetingState.name = mtg.name;
-        meetingState.description = mtg.description;
-        meetingState.users = mtg.users;
-        meetingState.topics = mtg.topics;
-        console.log("preFillForm", meetingState);
     }
 
     async function fetchMeetings() {
@@ -118,20 +70,19 @@ const MeetingData = ({itemId, updateMeetingsList}) => {
             const meetingData = await API.graphql(graphqlOperation(listMeetings))
             const meetings = meetingData.data.listMeetings.items
             setMeetings(meetings)
-            
         } catch (err) { console.log('error fetching meetings') }
     }
 
     async function addMeeting() {
         try {
             if (!meetingState.name || !meetingState.description) return
-            collectTopics();
-            collectUsers();
+            
             const meeting = { ...meetingState };
             setMeetings([...meetings, meeting]);
             clearState();
             await API.graphql(graphqlOperation(createMeeting, {input: meeting}));
             updateMeetingsList();
+
         } catch (err) {
             console.log('error creating meeting:', err)
         }
@@ -140,13 +91,14 @@ const MeetingData = ({itemId, updateMeetingsList}) => {
     async function updMeeting() {
         try {
             if (!meetingState.name || !meetingState.description) return
-            collectTopics();
-            collectUsers();
+            
             const meeting = { ...meetingState };
+            console.log("TOPIC MTGSTATE",meeting.topics)
             setMeetings([...meetings, meeting]);
             clearState();
             await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
             updateMeetingsList();
+
         } catch (err) {
             console.log('error updating meeting:', err)
         }
@@ -155,16 +107,14 @@ const MeetingData = ({itemId, updateMeetingsList}) => {
     function clearState() {
         meetingInitialState.id = generateId();
         setMeetingState(meetingInitialState);
-        topicList = [...''];
-        userList = [...''];
     }
 
     function disablePrefill() {
-        prefill = false;
+        setUsePrefill(false);
     }
 
     function enablePrefill() {
-        prefill = true;
+        setUsePrefill(true);
     }
     
     
@@ -219,12 +169,8 @@ MeetingData.propTypes = {
 
 const styles = {
     container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 5 },
-    meeting: { fontSize: 12, marginBottom: 15 },
-    input: { border: 'none', backgroundColor: '#ddd', marginBottom: 1, padding: 8, fontSize: 12 },
+    input: { border: 'none', backgroundColor: 'white', marginBottom: 1, padding: 8, fontSize: 12 },
     inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 1, padding: 8, fontSize: 12 },
-    meetingName: { fontSize: 12, fontWeight: 'bold' },
-    meetingDescription: { fontSize: 12, marginBottom: 0 },
-    topicDescription: { fontSize: 12, marginLeft: 20 },
     button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '12px 0px' }
 }
 

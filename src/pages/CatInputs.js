@@ -40,9 +40,9 @@ CatInputs.propTypes = {
 };
 
 const styles = {
-    container: { backgroundColor: '#ddd', width: 400, margin: '5 5', display: 'flex', flexDirection: 'row', paddingTop: 1, paddingBottom:1 },
-    label: { color: 'black', border: 'grey', backgroundColor: '#ddd', padding: 3, fontSize: 14, width: 20, margin: 1, marginLeft: 8 },
-    input: { color: 'black', border: 'grey', backgroundColor: 'white', padding: 3, fontSize: 14, width: 350, margin: 1 },
+    container: { backgroundColor: '#ddd', width: 400, margin: '5 0', display: 'flex', flexDirection: 'row', paddingTop: 1, paddingBottom:1 },
+    label: { color: 'black', border: 'grey', backgroundColor: '#ddd', padding: 3, fontSize: 14, width: 20, margin: 0, marginLeft: 8 },
+    input: { color: 'black', border: 'grey', backgroundColor: 'white', padding: 8, fontSize: 12, width: 290, margin: 0 },
 }
 
 
