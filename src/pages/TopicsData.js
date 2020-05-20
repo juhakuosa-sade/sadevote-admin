@@ -228,8 +228,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             const topicData = await API.graphql(graphqlOperation(listTopics))
             const topics = topicData.data.listTopics.items
             setTopics(topics)
-            //console.log("ZZZ fetchTopics2: ", topics);
-
         } catch (err) { console.log('error fetching topics') }
     }
 

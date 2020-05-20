@@ -22,6 +22,8 @@ const MeetingsList = ({cbfn}) => {
     const [meetings, setMeetings] = useState([]);
     const fState = initState ;
     const [uiState, setState] = useState(initState);
+    const [isLoading, setIsLoading] = useState(false);
+
 
     useEffect(() => {
         fetchMeetings();
@@ -35,12 +37,13 @@ const MeetingsList = ({cbfn}) => {
     async function fetchMeetings() {
         console.log("fetchMeetings()")
 
+        setIsLoading(true)
         try {
             const meetingData = await API.graphql(graphqlOperation(listMeetings))
             const meetings = meetingData.data.listMeetings.items
             setMeetings(meetings)
         } catch (err) { console.log('error fetching meetings') }
-    
+        setIsLoading(false)
     }
 
     async function delMeeting(id)  {
@@ -134,28 +137,35 @@ console.log("Rendering", fState.renderSelect);
 
 if (fState.renderSelect === "LIST") {
     return (
-    <div style={styles.container}>
-        <h3>Meetings</h3>        
-        {
-            meetings.map((meeting, index) => (
-                <div key={"divider" + index}>
-                <div key={"containerBox" + index} style={styles.rowcontainer}>
-                    <div key={"meetingItem" + index} style={styles.rowcontainer}>
-                        <div key={meeting.id ? meeting.id : index}>
-                            <p style={styles.meetingName}>{meeting.name}</p>
-                            <p style={styles.meetingDescription}>{meeting.description}</p>
+        isLoading ? (
+            <div style={styles.info}>
+                <p/>
+                <div>Loading ...</div>
+            </div>
+        ) : (
+            <div style={styles.container}>
+                <h3>Meetings</h3>        
+                {
+                    meetings.map((meeting, index) => (
+                        <div key={"divider" + index}>
+                        <div key={"containerBox" + index} style={styles.rowcontainer}>
+                            <div key={"meetingItem" + index} style={styles.rowcontainer}>
+                                <div key={meeting.id ? meeting.id : index}>
+                                    <p style={styles.meetingName}>{meeting.name}</p>
+                                    <p style={styles.meetingDescription}>{meeting.description}</p>
+                                </div>
+                            </div>
+                            <button style={styles.button} id={meeting.id} onClick={handleEdit}>Edit</button>
+                            <button style={styles.button} id={meeting.id} onClick={handleDelete}>Delete</button>
+                            <button style={styles.button} id={meeting.id} name={meeting.name} desc={meeting.description} onClick={handleSelect}>Select</button>
+                        </div>    
+                            <hr className="App-horizontal-divider" />
                         </div>
-                    </div>
-                    <button style={styles.button} id={meeting.id} onClick={handleEdit}>Edit</button>
-                    <button style={styles.button} id={meeting.id} onClick={handleDelete}>Delete</button>
-                    <button style={styles.button} id={meeting.id} name={meeting.name} desc={meeting.description} onClick={handleSelect}>Select</button>
-                </div>    
-                    <hr className="App-horizontal-divider" />
-                </div>
-            ))
-        }
-        <button style={styles.buttonwide} onClick={handleCreate}>Create new meeting</button>
-    </div>
+                    ))
+                }
+                <button style={styles.buttonwide} onClick={handleCreate}>Create new meeting</button>
+            </div>
+        )
     )
 }
 
@@ -231,6 +241,7 @@ const styles = {
     rowcontainer: { alignItems: 'right', color: 'black', backgroundColor:'#ddd', width: 500, margin: '0 0', display: 'flex', flexDirection: 'row', padding: 5 },
     meetingName: { fontSize: 14, fontWeight: 'bold', margin: 0, padding: 0 },
     meetingDescription: { fontSize: 12, margin: 0, padding: 0 },
+    info: { justifyContent: 'center', color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' },
     button: { width: 100, marginLeft: "auto", backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '8px 0px' },
     buttonwide: { marginTop: 10, width: 510, backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '12px 8px' },
 }
