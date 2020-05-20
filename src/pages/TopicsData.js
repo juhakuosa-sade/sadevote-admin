@@ -132,7 +132,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
 /** Topics */
     const [topicState, setTopicState] = useState(topicInitialState)
     const [topics, setTopics] = useState([])
-    const [votingOptions, setVotingOptions] = useState([])
     const [usePrefill, setUsePrefill] = useState(false);
     const [useUpdate, setUseUpdate] = useState(false);
 
@@ -150,7 +149,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         return () => {
             restoreState();
         };
-      }, []); // passing empty array means do only once (https://reactjs.org/docs/hooks-effect.html)
+      }, []);
 
     /***** PREFILL TOPIC FIELDS *****/
     useEffect(() => {
@@ -165,9 +164,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             }
             });
             setTopicState({...tpc});
-
         };
-
 
         if (usePrefill && itemId) {
             preFillForm(itemId);
@@ -178,9 +175,9 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     useEffect(() => {
 
         const idArray = topicState.voting_options;
-        console.log("idArray length: ", idArray.length);
 
         const fetchData = async () => {
+            console.log("idArray length: ", idArray.length);
 
             //create filter for fetching the needed voting options
             const filter = {or: []}
@@ -193,19 +190,18 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     
             //fetch the needed voting options
             const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter}))
-            const votingOptions = votingOptionData.data.listVotingOptions.items
-            setVotingOptions([...votingOptions])
+            const votingOptionsList = votingOptionData.data.listVotingOptions.items
        
-            console.log("prefillVotingOptions", votingOptions);
+            console.log("prefillVotingOptions", votingOptionsList);
             var cats = [];
-            votingOptions.forEach(element => {
+            votingOptionsList.forEach(element => {
                 const cat = { votingOptionId: element.id, catNumber: element.option_number, catText: element.option_text };
                 cats = [...cats, {...cat}]
             });
             setCats(cats);
         };
        
-        if (idArray.length>0) { //attempt to fetch with empty filter will cause DynamoDB error
+        if (usePrefill && idArray.length>0) { //attempt to fetch with empty filter will cause DynamoDB error
             fetchData();
         }
         
@@ -346,9 +342,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         setTopicState({ ...topic});
 
         console.log("handleDelete catState", catState);
-        console.log("handleDelete votingOptions", votingOptions);
         console.log("handleDelete topicState.voting_options", topicState.voting_options);
-
 
     }
 
@@ -359,9 +353,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     }
 
     return(   
-        /*isLoading ? (
-            <div>Loading ...</div>
-          ) : (*/
         <div style={styles.container}>
             <h3>Topic</h3>
             <input
@@ -414,8 +405,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
 
             ))
             }
-             <button style={styles.button} onFocus={disablePrefill} onClick={addBlankCat}>Add voting option</button> 
-            
+            <button style={styles.button} onFocus={disablePrefill} onClick={addBlankCat}>Add voting option</button> 
                 
             {
             useUpdate
@@ -426,7 +416,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             }
         
         </div>
-       /* )  */
     )  
 }
 

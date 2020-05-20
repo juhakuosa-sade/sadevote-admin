@@ -14,13 +14,11 @@ import { deleteTopic } from '../graphql/mutations'
 const initState = {
     renderSelect : "LIST",
     editParam : "",
-    doRender : false,
     doFetch : false
 };
 
 var listedTopics = [...''];
 export function getListedTopics() {
-    //console.log("listedTopics", listedTopics)
     return [...listedTopics]
 }
 
@@ -106,7 +104,6 @@ const TopicsList = () => {
         const drive = {
             renderSelect: mode,
             editParam : param,
-            doRender : doit
         }
         setState(drive)
 
@@ -118,11 +115,10 @@ const TopicsList = () => {
         
         fState.renderSelect="EDIT";
         fState.editParam=id;
-        fState.doRender=true;
 
         driveRendering("EDIT", id, true);
 
-        console.log("handleEdit:", fState.renderSelect, fState.editParam, fState.doRender);
+        console.log("handleEdit:", fState.renderSelect, fState.editParam);
     }
     
     const handleDelete = (event) => {
@@ -130,7 +126,6 @@ const TopicsList = () => {
 
         fState.renderSelect="DELETE";
         fState.editParam=id;
-        fState.doRender=true;
 
         driveRendering("DELETE", id, true);
 
@@ -141,11 +136,10 @@ const TopicsList = () => {
 
         fState.renderSelect="CREATE";
         fState.editParam='';
-        fState.doRender=true;
 
         driveRendering("CREATE", '', true);
 
-        console.log("handleCreate:", fState.renderSelect, fState.editParam, fState.doRender);
+        console.log("handleCreate:", fState.renderSelect, fState.editParam);
     }
     
     function resetRenderSelection() {
