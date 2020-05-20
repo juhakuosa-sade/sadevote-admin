@@ -30,6 +30,7 @@ const TopicsList = () => {
     const fState = initState ;
     const [uiState, setState] = useState(initState);
     const selectedMeeting = getSelectedMeeting();
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => 
     { 
@@ -58,7 +59,7 @@ const TopicsList = () => {
 
     async function fetchTopics() {
         console.log('fetchTopics')
-        
+        setIsLoading(true)
         try {
             const meeting = await API.graphql(graphqlOperation(getMeeting, {id: selectedMeeting.id}));
             topicIdList = [...meeting.data.getMeeting.topics]
@@ -82,6 +83,7 @@ const TopicsList = () => {
             });
 
         } catch (err) { console.log('error fetching topics') }
+        setIsLoading(false)
     
     }
 
@@ -157,27 +159,34 @@ console.log("Rendering", fState.renderSelect);
 
 if (fState.renderSelect === "LIST") {
     return (
-    <div style={styles.container}>
-        <h3>Topics</h3>        
-        {
-            topics.map((topic, index) => (
-                <div key={"divider" + index}>
-                <div key={"containerBox" + index} style={styles.rowcontainer}>
-                    <div key={"topicItem" + index} style={styles.rowcontainer}>
-                        <div key={topic.id ? topic.id : index}>
-                            <p style={styles.topicTitle}>{topic.topic_number}. {topic.topic_title}</p>
-                            <p style={styles.topicText}>{topic.topic_text}</p>
+        isLoading ? (
+            <div style={styles.info}>
+                <p/>
+                <div>Loading ...</div>
+            </div>
+        ) : (
+            <div style={styles.container}>
+                <h3>Topics</h3>        
+                {
+                    topics.map((topic, index) => (
+                        <div key={"divider" + index}>
+                        <div key={"containerBox" + index} style={styles.rowcontainer}>
+                            <div key={"topicItem" + index} style={styles.rowcontainer}>
+                                <div key={topic.id ? topic.id : index}>
+                                    <p style={styles.topicTitle}>{topic.topic_number}. {topic.topic_title}</p>
+                                    <p style={styles.topicText}>{topic.topic_text}</p>
+                                </div>
+                            </div>
+                            <button style={styles.button} id={topic.id} onClick={handleEdit}>Edit</button>
+                            <button style={styles.button} id={topic.id} onClick={handleDelete}>Delete</button>
+                        </div>    
+                            <hr className="App-horizontal-divider" />
                         </div>
-                    </div>
-                    <button style={styles.button} id={topic.id} onClick={handleEdit}>Edit</button>
-                    <button style={styles.button} id={topic.id} onClick={handleDelete}>Delete</button>
-                </div>    
-                    <hr className="App-horizontal-divider" />
-                </div>
-            ))
-        }
-        <button style={styles.buttonwide} onClick={handleCreate}>Create new topic</button>
-    </div>
+                    ))
+                }
+                <button style={styles.buttonwide} onClick={handleCreate}>Create new topic</button>
+            </div>
+        )
     )
 } 
 
@@ -221,6 +230,7 @@ const styles = {
     rowcontainer: { alignItems: 'right', color: 'black', backgroundColor:'#ddd', width: 500, margin: '0 0', display: 'flex', flexDirection: 'row', padding: 5 },
     topicTitle: { fontSize: 14, fontWeight: 'bold', margin: 0, padding: 0 },
     topicText: { fontSize: 12, margin: 0, padding: 0 },
+    info: { justifyContent: 'center', color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' },
     button: { width: 100, marginLeft: "auto", backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '8px 0px' },
     buttonwide: { marginTop: 10, width: 510, backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '12px 8px' },
 }
