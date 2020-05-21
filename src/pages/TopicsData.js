@@ -40,14 +40,16 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     var listedTopics = getListedTopics();
 
     async function updateMeetingData(id) {
+        let ret = null;
         try {
             const mtg = await API.graphql(graphqlOperation(getMeeting, {id: selectedMeeting.id}));
             let meeting = {...mtg.data.getMeeting}
             listedTopics = [...listedTopics, topicState.id];
             meeting.topics = [...listedTopics];
             console.log('updateMeetingData:', meeting)
-            await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
+            ret = await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
         } catch (err) { console.log('error updating meeting:', err) }
+        return ret;
     }
 
 /** Cat */
@@ -81,6 +83,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     const votingOptionToAdd = { ...votingOptionInitialState }
 
     async function addVotingOption() {
+        let ret = null;
         try {
             if (!(votingOptionToAdd.id)) {
                 console.log('error creating votingOption: ID = ',votingOptionToAdd.id);
@@ -89,13 +92,15 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             }
             const votingOption = { ...votingOptionToAdd }
             console.log('creating votingOption:', votingOption)
-            await API.graphql(graphqlOperation(createVotingOption, {input: votingOption}))
+            ret = await API.graphql(graphqlOperation(createVotingOption, {input: votingOption}))
         } catch (err) {
             console.log('error creating votingOption:', err)
         }
+        return ret;
     }
 
     async function updVotingOption() {
+        let ret = null;
         try {
             if (!(votingOptionToAdd.id)) {
                 console.log('error creating votingOption: ID = ',votingOptionToAdd.id);
@@ -104,22 +109,14 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             }
             const votingOption = { ...votingOptionToAdd }
             console.log('updating votingOption:', votingOption)
-            await API.graphql(graphqlOperation(updateVotingOption, {input: votingOption}))
+            ret = await API.graphql(graphqlOperation(updateVotingOption, {input: votingOption}))
         } catch (err) {
             console.log('error updating votingOption:', err)
         }
-    }
-    function composeNewVotingOption(idx) {
-        votingOptionToAdd.topic_id = topicState.id; 
-        votingOptionToAdd.topic_number = topicState.topic_number; 
-        votingOptionToAdd.id = generateId();
-        votingOptionToAdd.option_number = catState[idx].catNumber;
-        votingOptionToAdd.option_text = catState[idx].catText;
-        votingOptionToAdd.votes = 0;
-        votingOptionToAdd.unanimously_selected = false;
+        return ret;
     }
 
-    function composeOldVotingOption(idx, id) {
+    function composeVotingOption(idx, id) {
         votingOptionToAdd.topic_id = topicState.id; 
         votingOptionToAdd.topic_number = topicState.topic_number; 
         votingOptionToAdd.id = id;
@@ -127,6 +124,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         votingOptionToAdd.option_text = catState[idx].catText;
         votingOptionToAdd.votes = 0;
         votingOptionToAdd.unanimously_selected = false;
+        return votingOptionToAdd;
     }
 
 /** Topics */
@@ -134,6 +132,8 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     const [topics, setTopics] = useState([])
     const [usePrefill, setUsePrefill] = useState(false);
     const [useUpdate, setUseUpdate] = useState(false);
+    const [cbfunc, setCbFunc] = useState(false);
+
 
     /***** FETCH DATA *****/
     useEffect(() => {
@@ -149,7 +149,16 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         return () => {
             restoreState();
         };
-      }, []);
+    }, []);
+
+    useEffect(() => {
+        if (cbfunc) {
+            setTimeout(() => {
+                updateTopicsList(); 
+         }, 1500);
+    }
+    }, [cbfunc, updateTopicsList]);
+
 
     /***** PREFILL TOPIC FIELDS *****/
     useEffect(() => {
@@ -199,13 +208,14 @@ const TopicsData = ({itemId, updateTopicsList}) => {
                 cats = [...cats, {...cat}]
             });
             setCats(cats);
+            return votingOptionData;
         };
        
         if (usePrefill && idArray.length>0) { //attempt to fetch with empty filter will cause DynamoDB error
             fetchData();
         }
         
-    }, [topicState.voting_options]);
+    }, [topicState.voting_options, usePrefill]);
 
     function restoreState() {
         setUsePrefill(true);
@@ -219,15 +229,20 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     }
 
     async function fetchTopics() {
-        
+        let ret = null;
         try {
             const topicData = await API.graphql(graphqlOperation(listTopics))
             const topics = topicData.data.listTopics.items
             setTopics(topics)
-        } catch (err) { console.log('error fetching topics') }
+            ret = topics
+        } catch (err) { 
+            console.log('error fetching topics') 
+        }
+        return ret
     }
 
     async function addTopic() {
+        let ret = null;
         try {
         if (!topicState.id || !topicState.topic_number) {
             console.log('error creating topic: ID = ',topicState.id);
@@ -242,7 +257,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             {
                 console.log("foreach: ", index, element.catNumber, element.catText);
                 if ((element.catNumber>0) && (element.catText.length>0)) {
-                    composeNewVotingOption(index++);
+                    composeVotingOption(index++, generateId());
                     topic.voting_options = [...topic.voting_options, votingOptionToAdd.id]
                     addVotingOption();
                 }
@@ -252,19 +267,23 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         setTopicState({ ...topic});
         setTopics([...topics, topic]);
 
-        await API.graphql(graphqlOperation(createTopic, {input: topic}));
+        ret = await API.graphql(graphqlOperation(createTopic, {input: topic}));
 
-        updateTopicsList();
         updateMeetingData(topic.id);
         
         clearState();
+
+        setCbFunc(ret === null)
+        //updateTopicsList(); // NOTE: This will take us back to caller hook (TopicsList)
         
         } catch (err) {
             console.log('error creating topic:', err);
         }
+        return ret;
     }
 
     async function updTopic() {
+        let ret = null;
         try {
         if (!topicState.id || !topicState.topic_number) {
             console.log('error creating topic: ID = ',topicState.id);
@@ -280,12 +299,12 @@ const TopicsData = ({itemId, updateTopicsList}) => {
                 console.log("foreach: ", index, element.catNumber, element.catText);
                 if ((element.catNumber>0) && (element.catText.length>0)) {
                     if (element.votingOptionId) {
-                        composeOldVotingOption(index++, element.votingOptionId);
+                        composeVotingOption(index++, element.votingOptionId);
                         topic.voting_options = [...topic.voting_options, element.votingOptionId];
                         updVotingOption();
                     }
                     else {
-                        composeNewVotingOption(index++);
+                        composeVotingOption(index++, generateId());
                         topic.voting_options = [...topic.voting_options, votingOptionToAdd.id]
                         addVotingOption();
                     } 
@@ -299,14 +318,16 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         setTopicState({ ...topic});
         setTopics([...topics, topic]);
 
-        await API.graphql(graphqlOperation(updateTopic, {input: topic}));
+        setCbFunc( ret = await API.graphql(graphqlOperation(updateTopic, {input: topic})));
 
-        updateTopicsList();
         clearState();
+        //updateTopicsList(); // NOTE: This will take us back to caller hook (TopicsList)
 
-    } catch (err) {
+
+        } catch (err) {
             console.log('error creating topic:', err);
         }
+        return ret;
     }
 
     function disablePrefill() {
@@ -324,7 +345,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
 
         if (id === '') {
             console.log("handleDelete CAT1:", num, parseInt(num));
-            //const cats = [...catState.filter(item => item.catNumber !== num)];
             const cats = catState.filter(item => item.catNumber !== parseInt(num));
             console.log("handleDelete CAT3", cats);
             setCats(cats);
@@ -351,8 +371,14 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     function setInput(key, value) {
         setTopicState({ ...topicState, [key]: value })
     }
-
-    return(   
+    
+    return( 
+        cbfunc ? (
+            <div style={styles.info}>
+                <p/>
+                <div>Loading ...</div>
+            </div>
+        ) : (  
         <div style={styles.container}>
             <h3>Topic</h3>
             <input
@@ -416,6 +442,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             }
         
         </div>
+    )
     )  
 }
 
@@ -431,6 +458,7 @@ const styles = {
     input: { border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 12 },
     inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 2, padding: 8, fontSize: 12 },
     input3: { border: 'none', backgroundColor: 'white', marginBottom: 0, padding: 8, fontSize: 12 },
+    info: { justifyContent: 'center', color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' },
     button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginTop: 2, marginBottom: 8, padding: '12px 0px' },
     button2: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginTop: 0, marginBottom: 0, padding: '10 8' }
 }
