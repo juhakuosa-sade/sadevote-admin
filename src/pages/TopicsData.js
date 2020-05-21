@@ -7,10 +7,10 @@ import { generateId, getSelectedMeeting } from '../App'
 import { getListedTopics } from './TopicsList'
 
 import { API, graphqlOperation } from 'aws-amplify'
-import { listTopics, getMeeting, listVotingOptions } from '../graphql/queries'
+import {  getMeeting, listTopics, listVotingOptions } from '../graphql/queries'
 
-import { createTopic, updateTopic, updateMeeting, updateVotingOption } from '../graphql/mutations'
-import { createVotingOption } from '../graphql/mutations'
+import { updateMeeting, createTopic, updateTopic  } from '../graphql/mutations'
+import { createVotingOption, updateVotingOption, deleteVotingOption} from '../graphql/mutations'
 
 
 const topicInitialState = {
@@ -82,7 +82,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
 /** Voting options */
     const votingOptionToAdd = { ...votingOptionInitialState }
 
-    async function addVotingOption() {
+    async function addVotingOptionToDb() {
         let ret = null;
         try {
             if (!(votingOptionToAdd.id)) {
@@ -99,7 +99,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         return ret;
     }
 
-    async function updVotingOption() {
+    async function updVotingOptionToDb() {
         let ret = null;
         try {
             if (!(votingOptionToAdd.id)) {
@@ -130,6 +130,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
 /** Topics */
     const [topicState, setTopicState] = useState(topicInitialState)
     const [topics, setTopics] = useState([])
+
     const [usePrefill, setUsePrefill] = useState(false);
     const [useUpdate, setUseUpdate] = useState(false);
     const [cbfunc, setCbFunc] = useState(false);
@@ -221,12 +222,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         setUsePrefill(true);
         setUseUpdate(false);
     }
-    
-    function clearState() {
-        topicInitialState.id = generateId();
-        clearCatState();
-        setTopicState(topicInitialState)
-    }
 
     async function fetchTopics() {
         let ret = null;
@@ -241,7 +236,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         return ret
     }
 
-    async function addTopic() {
+    async function addTopic() { // 'Create topic' button clicked
         let ret = null;
         try {
         if (!topicState.id || !topicState.topic_number) {
@@ -259,7 +254,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
                 if ((element.catNumber>0) && (element.catText.length>0)) {
                     composeVotingOption(index++, generateId());
                     topic.voting_options = [...topic.voting_options, votingOptionToAdd.id]
-                    addVotingOption();
+                    addVotingOptionToDb();
                 }
             })
 
@@ -267,22 +262,20 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         setTopicState({ ...topic});
         setTopics([...topics, topic]);
 
-        ret = await API.graphql(graphqlOperation(createTopic, {input: topic}));
+        updateMeetingData(topic.id); // add the new topic to meeting topics list for selected meeting
 
-        updateMeetingData(topic.id);
+        // This will execute the callback and return to TopicsList if db operation succeeded
+        setCbFunc( ret = await API.graphql(graphqlOperation(createTopic, {input: topic})));
         
-        clearState();
-
-        setCbFunc(ret === null)
-        //updateTopicsList(); // NOTE: This will take us back to caller hook (TopicsList)
-        
+        // clearState();
+   
         } catch (err) {
             console.log('error creating topic:', err);
         }
         return ret;
     }
 
-    async function updTopic() {
+    async function updTopic() { // 'Update topic' button clicked
         let ret = null;
         try {
         if (!topicState.id || !topicState.topic_number) {
@@ -301,12 +294,12 @@ const TopicsData = ({itemId, updateTopicsList}) => {
                     if (element.votingOptionId) {
                         composeVotingOption(index++, element.votingOptionId);
                         topic.voting_options = [...topic.voting_options, element.votingOptionId];
-                        updVotingOption();
+                        updVotingOptionToDb();
                     }
                     else {
                         composeVotingOption(index++, generateId());
                         topic.voting_options = [...topic.voting_options, votingOptionToAdd.id]
-                        addVotingOption();
+                        addVotingOptionToDb();
                     } 
                 }
                 else {
@@ -318,10 +311,10 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         setTopicState({ ...topic});
         setTopics([...topics, topic]);
 
+        // This will execute the callback and return to TopicsList if db operation succeeded
         setCbFunc( ret = await API.graphql(graphqlOperation(updateTopic, {input: topic})));
 
-        clearState();
-        //updateTopicsList(); // NOTE: This will take us back to caller hook (TopicsList)
+        //clearState();
 
 
         } catch (err) {
@@ -338,7 +331,8 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         setUsePrefill(true);
     }
 
-    const handleDelete = (event) => {
+    async function handleDelete(event) {
+    //const handleDelete = (event) => {
         let id = event.target.getAttribute('id'); 
         let num = event.target.getAttribute('num'); 
         console.log("handleDelete", id);
@@ -356,6 +350,10 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             clearCatState();
         }
         else {
+            const tpc = { id: id }
+            console.log("Deleting", tpc.id, "from DynamoDb table")
+            await API.graphql(graphqlOperation(deleteVotingOption, {input: tpc}))
+
             topic.voting_options = topic.voting_options.filter(item => item !== id);
             topic.voting_options_count = topic.voting_options.length;
         }
