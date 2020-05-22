@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react'
-import PropTypes from 'prop-types';
 
 import '../App.css';
 
 import { API, graphqlOperation } from 'aws-amplify'
 
-import { listMeetings } from '../graphql/queries'
-import MeetingData from './MeetingsData';
-import { setSelectedMeeting } from '../App';
-import { deleteMeeting } from '../graphql/mutations'
+import { listUsers } from '../graphql/queries'
+import UserData from './UsersData';
+import { deleteUser } from '../graphql/mutations'
 
 
 const initState = {
@@ -16,50 +14,75 @@ const initState = {
     editParam : "",
 };
 
-const MeetingsList = ({cbfn}) => {
+const UsersList = () => {
 
-    const [meetings, setMeetings] = useState([]);
+    /*var listedUsers = [...''];
+    export function getListedUsers() {
+        return [...listedUsers]
+    }*/
+
+    const [users, setUsers] = useState([]);
     const fState = initState ;
     const [uiState, setState] = useState(initState);
     const [isLoading, setIsLoading] = useState(false);
 
 
     useEffect(() => {
-        fetchMeetings();
+        fetchUsers();
     }, [])
 
     function updateFetch() {
         console.log("updateFetch()")
-        fetchMeetings();
+        fetchUsers();
     }
         
-    async function fetchMeetings() {
-        console.log("fetchMeetings()")
+    async function fetchUsers() {
+        console.log("fetchUsers()")
 
         setIsLoading(true)
         try {
-            const meetingData = await API.graphql(graphqlOperation(listMeetings))
-            const meetings = meetingData.data.listMeetings.items
-            setMeetings(meetings)
-        } catch (err) { console.log('error fetching meetings') }
+            const userData = await API.graphql(graphqlOperation(listUsers))
+            const users = userData.data.listUsers.items
+            // TODO: Add filtering to allow seeing only those items which the admin user has created himself
+
+            setUsers(users)
+            listedUsers = [];
+            filteredUsers.forEach(element => {
+                listedUsers = [...listedUsers, element.id]
+            });
+        } catch (err) { console.log('error fetching users') }
         setIsLoading(false)
     }
 
-    async function delMeeting(id)  {
-        console.log('deleting meeting:', id);
+    async function delUser(id)  {
+        console.log('deleting user:', id);
         const mtg = {
             id: id,
           };
         try {
-            await API.graphql(graphqlOperation(deleteMeeting, {input: mtg}));
+            await API.graphql(graphqlOperation(deleteUser, {input: mtg}));
             updateFetch();
         } catch (err) {
-            console.log('error deleting meeting:', err)
+            console.log('error deleting user:', err)
         }
         return false;
     }
 
-    const driveRendering = ({mode, param, doit}) => {
+    async function updateMeetingData(id) {
+        const selectedMeeting = getSelectedMeeting();
+        let ret = null;
+        try {
+            const mtg = await API.graphql(graphqlOperation(getMeeting, {id: selectedMeeting.id}));
+            let meeting = {...mtg.data.getMeeting}
+            const listedUsers = [...meeting.users, id];
+            meeting.users = [...listedUsers];
+            console.log('updateMeetingData:', meeting)
+            ret = await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
+        } catch (err) { console.log('error updating meeting:', err) }
+        return ret;
+    }
+
+    const driveRendering = ({mode, param}) => {
         /* set some shit to state so that it causes rendering! */
         setState({renderSelect: mode});
         setState({editParam : param});
@@ -68,12 +91,7 @@ const MeetingsList = ({cbfn}) => {
 
     const handleEdit = (event) => {
         const id = event.target.getAttribute('id');
-        const name = event.target.getAttribute('name');
-        const desc = event.target.getAttribute('desc');
-
-        setSelectedMeeting(id, name, desc);
-        console.log("WTF", cbfn);
-
+        
         fState.renderSelect="EDIT";
         fState.editParam=id;
 
@@ -84,11 +102,8 @@ const MeetingsList = ({cbfn}) => {
     
     const handleSelect = (event) => {
         const id = event.target.getAttribute('id');
-        const name = event.target.getAttribute('name');
-        const desc = event.target.getAttribute('desc');
-
-        setSelectedMeeting(id, name, desc);
-        console.log("WTF", cbfn);
+        
+        ///updateMeetingData(id);
 
         fState.renderSelect="SELECT";
         fState.editParam=id;
@@ -138,26 +153,26 @@ if (fState.renderSelect === "LIST") {
             </div>
         ) : (
             <div style={styles.container}>
-                <h3>Meetings</h3>        
+                <h3>Users</h3>        
                 {
-                    meetings.map((meeting, index) => (
+                    users.map((user, index) => (
                         <div key={"divider" + index}>
                         <div key={"containerBox" + index} style={styles.rowcontainer}>
-                            <div key={"meetingItem" + index} style={styles.rowcontainer}>
-                                <div key={meeting.id ? meeting.id : index}>
-                                    <p style={styles.meetingName}>{meeting.name}</p>
-                                    <p style={styles.meetingDescription}>{meeting.description}</p>
+                            <div key={"userItem" + index} style={styles.rowcontainer}>
+                                <div key={user.id ? user.id : index}>
+                                    <p style={styles.userEmail}>{user.email}</p>
+                                    <p style={styles.userData}>{user.firstname} {user.lastname}</p>
                                 </div>
                             </div>
-                            <button style={styles.button} id={meeting.id} onClick={handleEdit}>Edit</button>
-                            <button style={styles.button} id={meeting.id} onClick={handleDelete}>Delete</button>
-                            <button style={styles.button} id={meeting.id} name={meeting.name} desc={meeting.description} onClick={handleSelect}>Select</button>
+                            <button style={styles.button} id={user.id} onClick={handleEdit}>Edit</button>
+                            <button style={styles.button} id={user.id} onClick={handleDelete}>Delete</button>
+                            <button style={styles.button} id={user.id} onClick={handleSelect}>Select</button>
                         </div>    
                             <hr className="App-horizontal-divider" />
                         </div>
                     ))
                 }
-                <button style={styles.buttonwide} onClick={handleCreate}>Create new meeting</button>
+                <button style={styles.buttonwide} onClick={handleCreate}>Create new user</button>
             </div>
         )
     )
@@ -167,18 +182,18 @@ else if (fState.renderSelect === "SELECT") {
     const selected = resetRenderSelection();
     return (
     <div style={styles.container}>
-        <h3>Meeting selected:</h3>        
+        <h3>User selected:</h3>        
         {
-            meetings.map((meeting, index) => (
-                <div key={meeting.id ? meeting.id : index}>
+            users.map((user, index) => (
+                <div key={user.id ? user.id : index}>
                 {
-                meeting.id === selected 
+                user.id === selected 
                 ? 
                     <div> 
-                        <p style={styles.meetingDescription}>{meeting.id}</p>
+                        <p style={styles.userData}>{user.id}</p>
                         <p/>
-                        <p style={styles.meetingName}>{meeting.name}</p>
-                        <p style={styles.meetingDescription}>{meeting.description}</p>
+                        <p style={styles.userEmail}>{user.email}</p>
+                        <p style={styles.userData}>{user.firstname} {user.lastname}</p>
                     </div>   
                 : 
                 <p/> 
@@ -196,19 +211,19 @@ else if (fState.renderSelect === "EDIT") {
     const selected = resetRenderSelection(); 
     return (
     <div style={styles.container}>
-        <MeetingData itemId = {selected} updateMeetingsList = {updateFetch}/>  
+        <UserData itemId = {selected} updateUsersList = {updateFetch}/>  
     </div>
     )
 }
 
 else if (fState.renderSelect === "DELETE") {
     const selected = resetRenderSelection(); 
-    const mtg = delMeeting(selected);
+    const mtg = delUser(selected);
 
     var res = "";
 
-    if (!mtg) res= "Deleting meeting " + selected + " failed.";
-    else res = "Meeting " + selected + " deleted.";    
+    if (!mtg) res= "Deleting user " + selected + " failed.";
+    else res = "User " + selected + " deleted.";    
     
     return (
         <h4>{res}</h4>        
@@ -219,24 +234,20 @@ else /* if (fState.renderSelect === "CREATE") */ {
     resetRenderSelection();
     return (
     <div style={styles.container}>
-        <MeetingData updateMeetingsList = {updateFetch} />  
+        <UserData updateUsersList = {updateFetch} />  
     </div>
     )
     
 }
 }
 
-MeetingsList.propTypes = {
-    cbfn: PropTypes.func
-}
-
 const styles = {
     container: { width: 500, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 0 },
     rowcontainer: { alignItems: 'right', color: 'black', backgroundColor:'#ddd', width: 500, margin: '0 0', display: 'flex', flexDirection: 'row', padding: 5 },
-    meetingName: { fontSize: 14, fontWeight: 'bold', margin: 0, padding: 0 },
-    meetingDescription: { fontSize: 12, margin: 0, padding: 0 },
+    userEmail: { fontSize: 14, fontWeight: 'bold', margin: 0, padding: 0 },
+    userData: { fontSize: 12, margin: 0, padding: 0 },
     info: { justifyContent: 'center', color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' },
     button: { width: 100, marginLeft: "auto", backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '8px 0px' },
     buttonwide: { marginTop: 10, width: 510, backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '12px 8px' },
 }
-export default MeetingsList;
+export default UsersList;
