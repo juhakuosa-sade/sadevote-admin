@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react'
+import { FaCheck } from 'react-icons/fa';
+
+import { getSelectedMeeting } from '../App'
+import { meetingInitialState } from'./MeetingsData';
 
 import '../App.css';
 
 import { API, graphqlOperation } from 'aws-amplify'
 
-import { listUsers } from '../graphql/queries'
+import { listUsers, getMeeting } from '../graphql/queries'
 import UserData from './UsersData';
-import { deleteUser } from '../graphql/mutations'
+import { deleteUser, updateMeeting } from '../graphql/mutations'
 
 
 const initState = {
@@ -16,40 +20,58 @@ const initState = {
 
 const UsersList = () => {
 
-    /*var listedUsers = [...''];
-    export function getListedUsers() {
-        return [...listedUsers]
-    }*/
-
     const [users, setUsers] = useState([]);
     const fState = initState ;
     const [uiState, setState] = useState(initState);
     const [isLoading, setIsLoading] = useState(false);
+    const [mtgFetchAllowed, setMtgFetchAllowed] = useState(true);
+    const [mtgState, setMtgState] = useState();
+    const [noMeetingSelected, setNoMeetingSelected] = useState(false);
 
+
+    const selectedMeeting = getSelectedMeeting();
 
     useEffect(() => {
-        fetchUsers();
+        fetchAllUsers();
     }, [])
+    
+    useEffect(() => {
+        async function getMeetingUsers(id) {
+
+            try {
+                const mtg = await API.graphql(graphqlOperation(getMeeting, {id: id}));
+                const meeting = {...mtg.data.getMeeting}
+                setMtgState({...meeting});  
+            } catch (error) {
+                console.log("Error in getting meeting users ( getMeetingUsers(id) )", error);
+                setMtgState({...meetingInitialState}); 
+                setNoMeetingSelected(true); 
+            }
+        }
+
+        if (mtgFetchAllowed) {
+            setMtgFetchAllowed(false)
+            getMeetingUsers(selectedMeeting.id)
+        }
+
+    }, [selectedMeeting.id, mtgFetchAllowed])
 
     function updateFetch() {
         console.log("updateFetch()")
-        fetchUsers();
+        fetchAllUsers();
     }
-        
-    async function fetchUsers() {
+    
+    async function fetchAllUsers() {
         console.log("fetchUsers()")
 
         setIsLoading(true)
         try {
             const userData = await API.graphql(graphqlOperation(listUsers))
-            const users = userData.data.listUsers.items
+            const userIdList = userData.data.listUsers.items
             // TODO: Add filtering to allow seeing only those items which the admin user has created himself
 
-            setUsers(users)
-            listedUsers = [];
-            filteredUsers.forEach(element => {
-                listedUsers = [...listedUsers, element.id]
-            });
+            setUsers(userIdList)
+            
         } catch (err) { console.log('error fetching users') }
         setIsLoading(false)
     }
@@ -68,19 +90,19 @@ const UsersList = () => {
         return false;
     }
 
-    async function updateMeetingData(id) {
-        const selectedMeeting = getSelectedMeeting();
+    async function updateMeetingData() {
+        
         let ret = null;
+        if (selectedMeeting.id === '') return ret;
+
         try {
-            const mtg = await API.graphql(graphqlOperation(getMeeting, {id: selectedMeeting.id}));
-            let meeting = {...mtg.data.getMeeting}
-            const listedUsers = [...meeting.users, id];
-            meeting.users = [...listedUsers];
+            const meeting = {...mtgState}
             console.log('updateMeetingData:', meeting)
             ret = await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
         } catch (err) { console.log('error updating meeting:', err) }
+
         return ret;
-    }
+   }
 
     const driveRendering = ({mode, param}) => {
         /* set some shit to state so that it causes rendering! */
@@ -89,40 +111,68 @@ const UsersList = () => {
         console.log("Rendering for", uiState.renderSelect);
     }
 
+    function isSelected(id) {
+       if (mtgState) {
+            const item = mtgState.users.find(item => item === id);     
+            console.log("isSelected", id, item)
+            if (item === id) return true
+        }
+        return false      
+    }
+    
     const handleEdit = (event) => {
         const id = event.target.getAttribute('id');
         
         fState.renderSelect="EDIT";
         fState.editParam=id;
 
-        driveRendering("EDIT", id, true);
+        driveRendering("EDIT", id);
 
         console.log("handleEdit:", fState.renderSelect, fState.editParam);
     }
-    
+
     const handleSelect = (event) => {
         const id = event.target.getAttribute('id');
         
-        ///updateMeetingData(id);
-
-        fState.renderSelect="SELECT";
+        fState.renderSelect="LIST";
         fState.editParam=id;
 
-        driveRendering("SELECT", id, true);
+        const arr = [...mtgState.users, id]; 
+        //setMtgState({ users: [...arr]});
+        setMtgState({ ...mtgState, users: [...arr]});
+    
+        driveRendering("LIST", id);
 
         console.log("handleSelect:", fState.renderSelect, fState.editParam);
 
     }
 
-    const handleDelete = (event) => {
-        let id = event.target.getAttribute('id');
-
-        fState.renderSelect="DELETE";
+    const handleUnSelect = (event) => {
+        const id = event.target.getAttribute('id');
+        
+        fState.renderSelect="LIST";
         fState.editParam=id;
 
-        driveRendering("DELETE", id, true);
+        const arr = mtgState.users.filter(item => item !== id);     
+        //setMtgState({ users: [...arr]});
+        setMtgState({ ...mtgState, users: [...arr]});
+    
+        driveRendering("LIST", id);
 
-        console.log("handleDelete", id);
+        console.log("handleSelect:", fState.renderSelect, fState.editParam);
+
+    }
+
+    const handleUpdateMtg = (event) => {
+
+        updateMeetingData();
+
+        fState.renderSelect="LIST";
+        fState.editParam='';
+
+        driveRendering("LIST", '');
+
+        console.log("handleUpdateMtg");
     }
 
     const handleCreate = (event) => {
@@ -130,7 +180,7 @@ const UsersList = () => {
         fState.renderSelect="CREATE";
         fState.editParam='';
 
-        driveRendering("CREATE", '', true);
+        driveRendering("CREATE", '');
 
         console.log("handleCreate:", fState.renderSelect, fState.editParam);
     }
@@ -141,7 +191,7 @@ const UsersList = () => {
         fState.editParam='';
         return (param);
     }
-    
+   
 console.log("Rendering", fState.renderSelect);
 
 if (fState.renderSelect === "LIST") {
@@ -159,20 +209,43 @@ if (fState.renderSelect === "LIST") {
                         <div key={"divider" + index}>
                         <div key={"containerBox" + index} style={styles.rowcontainer}>
                             <div key={"userItem" + index} style={styles.rowcontainer}>
+                                {
+                                isSelected(user.id)  
+                                    ?
+                                    <div hidden = {false}>
+                                        <FaCheck style={styles.icon} />                               
+                                    </div>
+                                    :
+                                    <div hidden = {true}>
+                                        <FaCheck style={styles.icon} />                               
+                                    </div>
+                                }
                                 <div key={user.id ? user.id : index}>
                                     <p style={styles.userEmail}>{user.email}</p>
-                                    <p style={styles.userData}>{user.firstname} {user.lastname}</p>
+                                    <p style={styles.userData}>{user.firstname} {user.lastname} ({user.shares} shares)</p>
                                 </div>
+                                
                             </div>
+                            
                             <button style={styles.button} id={user.id} onClick={handleEdit}>Edit</button>
-                            <button style={styles.button} id={user.id} onClick={handleDelete}>Delete</button>
-                            <button style={styles.button} id={user.id} onClick={handleSelect}>Select</button>
+                            
+                            {
+                            isSelected(user.id)  
+                                ?
+                                <button hidden={noMeetingSelected} style={styles.button} id={user.id} onClick={handleUnSelect}>Exclude</button>
+                                :
+                                <button hidden={noMeetingSelected} style={styles.button} id={user.id} onClick={handleSelect}>Include</button>
+                            }
+
                         </div>    
                             <hr className="App-horizontal-divider" />
                         </div>
                     ))
                 }
                 <button style={styles.buttonwide} onClick={handleCreate}>Create new user</button>
+
+                <button style={styles.buttonwide} onClick={handleUpdateMtg}>Update meeting</button>
+
             </div>
         )
     )
@@ -246,6 +319,7 @@ const styles = {
     rowcontainer: { alignItems: 'right', color: 'black', backgroundColor:'#ddd', width: 500, margin: '0 0', display: 'flex', flexDirection: 'row', padding: 5 },
     userEmail: { fontSize: 14, fontWeight: 'bold', margin: 0, padding: 0 },
     userData: { fontSize: 12, margin: 0, padding: 0 },
+    icon: {color: "green", padding: 5, alignItems: 'right' },
     info: { justifyContent: 'center', color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' },
     button: { width: 100, marginLeft: "auto", backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '8px 0px' },
     buttonwide: { marginTop: 10, width: 510, backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '12px 8px' },

@@ -26,10 +26,11 @@ const MeetingData = ({itemId, updateMeetingsList}) => {
        fetchMeetings()
     }, []);
 
-    useEffect(() => { 
+    useEffect(() => {             
+
         // do after mounting   
-            enablePrefill();
             setMeetingState({...meetingInitialState});
+            enablePrefill();
         // do before unmounting
         return () => {
             restoreState();

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { FaCheck, FaBeer } from 'react-icons/fa';
+import { FaCheck } from 'react-icons/fa';
 
-import { getSelectedMeeting, setSelectedMeeting } from '../App';
+import { getSelectedMeeting } from '../App';
 
 import '../App.css';
 
@@ -17,39 +17,111 @@ const initState = {
     editParam : "",
 };
 
+    //TODO: Buttons Select, Unselect ==> Include, Exclude. Hide or Disable if meeting is not selected.
+    //TODO: use one button include/exclude      
+    //TODO: Select/Unselect ==> Update meeting.users[] list
+ 
+/*
+var listedUsers = [...''];
+export function getListedUsers() {
+    return [...listedUsers]
+}
+*/
+
+
 const AllUsersList = () => {
 
-    /*var listedUsers = [...''];
-    export function getListedUsers() {
-        return [...listedUsers]
-    }*/
-
-    
     const [selectedUsers, setSelectedUsers] = useState([{id:'', selected: false}]);
     const [users, setUsers] = useState([]);
     const fState = initState ;
     const [uiState, setState] = useState(initState);
     const [isLoading, setIsLoading] = useState(false);
+    const [mtgFetchAllowed, setMtgFetchAllowed] = useState(true);
+    const [mtgState, setMtgState] = useState();
 
+
+    const selectedMeeting = getSelectedMeeting();
 
     useEffect(() => {
-        fetchUsers();
+        fetchAllUsers();
     }, [])
+
+    useEffect(() => {
+        async function getMeetingUsers(id) {
+            try {
+                const mtg = await API.graphql(graphqlOperation(getMeeting, {id: id}));
+                const meeting = {...mtg.data.getMeeting}
+                setMtgState(meeting);
+                console.log('getMeetingUsers:', meeting)
+                
+                setUsers(meeting.users)
+                console.log('getMeetingUsers (users):', users)
+                
+                let selectedOnes = [];   
+                users.forEach(element => {
+                    const selectedUser = {id: element.id, selected: true}
+                    selectedOnes = [...selectedOnes, selectedUser]
+                });
+                
+                setSelectedUsers(selectedOnes);
+                console.log('getMeetingUsers (selectedOnes):', users)
+
+            } catch (err) { console.log('error updating meeting:', err) }
+            
+        }
+
+        if (mtgFetchAllowed) {
+            setMtgFetchAllowed(false)
+            getMeetingUsers(selectedMeeting.id)
+        }
+
+    }, [users, selectedMeeting, mtgFetchAllowed])
 
     function updateFetch() {
         console.log("updateFetch()")
-        fetchUsers();
+        fetchAllUsers();
     }
-        
+/*
     async function fetchUsers() {
         console.log("fetchUsers()")
 
         setIsLoading(true)
         try {
             const userData = await API.graphql(graphqlOperation(listUsers))
-            const users = userData.data.listUsers.items
+            const userIdList = userData.data.listUsers.items
             // TODO: Add filtering to allow seeing only those items which the admin user has created himself
-            setUsers(users)
+            var filteredUsers = [...''];
+            userIdList.forEach(element => {
+                users.forEach(user => {
+                    if (element === user.id) {
+                        filteredUsers = [...filteredUsers, user]
+                    }
+                });
+             });
+
+            setUsers(filteredUsers)
+
+            listedUsers = [];
+            filteredUsers.forEach(element => {
+                listedUsers = [...listedUsers, element.id]
+            });
+
+
+        } catch (err) { console.log('error fetching users') }
+        setIsLoading(false)
+    }
+*/
+    async function fetchAllUsers() {
+        console.log("fetchUsers()")
+
+        setIsLoading(true)
+        try {
+            const userData = await API.graphql(graphqlOperation(listUsers))
+            const userIdList = userData.data.listUsers.items
+            // TODO: Add filtering to allow seeing only those items which the admin user has created himself
+
+            setUsers(userIdList)
+            
         } catch (err) { console.log('error fetching users') }
         setIsLoading(false)
     }
@@ -68,9 +140,28 @@ const AllUsersList = () => {
         return false;
     }
 
-    async function updateMeetingData(id) {
-        const selectedMeeting = getSelectedMeeting();
+    async function updateMeetingData() {
         let ret = null;
+        if (selectedMeeting.id.length === 0) return ret;
+
+        let userlist = [];
+        try {
+            selectedUsers.forEach(element => {
+                userlist = [...userlist, element.id];
+            });
+            const meeting = {...mtgState}
+            meeting.users = [...userlist];
+            console.log('updateMeetingData:', meeting)
+            ret = await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
+        } catch (err) { console.log('error updating meeting:', err) }
+
+        return ret;
+    }
+/*
+    async function updateMeetingData(id) {
+        let ret = null;
+        if (selectedMeeting.id.length === 0) return ret;
+
         try {
             const mtg = await API.graphql(graphqlOperation(getMeeting, {id: selectedMeeting.id}));
             let meeting = {...mtg.data.getMeeting}
@@ -79,8 +170,10 @@ const AllUsersList = () => {
             console.log('updateMeetingData:', meeting)
             ret = await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
         } catch (err) { console.log('error updating meeting:', err) }
+
         return ret;
     }
+*/
 
     const driveRendering = ({mode, param}) => {
         /* set some shit to state so that it causes rendering! */
@@ -89,21 +182,9 @@ const AllUsersList = () => {
         console.log("Rendering for", uiState.renderSelect);
     }
 
-    const handleEdit = (event) => {
-        const id = event.target.getAttribute('id');
-        
-        fState.renderSelect="EDIT";
-        fState.editParam=id;
-
-        driveRendering("EDIT", id, true);
-
-        console.log("handleEdit:", fState.renderSelect, fState.editParam);
-    }
-
     function isSelected(id) {
-        
         //const item = selectedUsers.filter(item => item.id === id);
-        const array = [...selectedUsers]
+        const array = [...selectedUsers];
         const item =  { id: id, selected: false };
         array.forEach(element => {
             if (element.id === id) {
@@ -115,6 +196,17 @@ const AllUsersList = () => {
         return item.selected;
     }
     
+    const handleEdit = (event) => {
+        const id = event.target.getAttribute('id');
+        
+        fState.renderSelect="EDIT";
+        fState.editParam=id;
+
+        driveRendering("EDIT", id);
+
+        console.log("handleEdit:", fState.renderSelect, fState.editParam);
+    }
+
     const handleSelect = (event) => {
         const id = event.target.getAttribute('id');
         
@@ -132,9 +224,9 @@ const AllUsersList = () => {
         if (found) setSelectedUsers([...updatedArray]);
         else setSelectedUsers([...selectedUsers, { id: id, selected: true }]);
         
-        ///updateMeetingData(id);
+        //updateMeetingData(id);
 
-        driveRendering("LIST", id, true);
+        driveRendering("LIST", id);
 
         console.log("handleSelect:", fState.renderSelect, fState.editParam);
 
@@ -156,8 +248,10 @@ const AllUsersList = () => {
         });
         if (found) setSelectedUsers([...updatedArray]);
         else setSelectedUsers([...selectedUsers, { id: id, selected: false }]);
+     
+        //updateMeetingData(id); Tämä lisää id:n, pitäs poistaa id
 
-        driveRendering("LIST", id, true);
+        driveRendering("LIST", id);
 
         console.log("handleSelect:", fState.renderSelect, fState.editParam);
 
@@ -169,9 +263,21 @@ const AllUsersList = () => {
         fState.renderSelect="DELETE";
         fState.editParam=id;
 
-        driveRendering("DELETE", id, true);
+        driveRendering("DELETE", id);
 
         console.log("handleDelete", id);
+    }
+
+    const handleUpdateMtg = (event) => {
+
+        updateMeetingData();
+
+        fState.renderSelect="LIST";
+        fState.editParam='';
+
+        driveRendering("LIST", '');
+
+        console.log("handleUpdateMtg");
     }
 
     const handleCreate = (event) => {
@@ -179,7 +285,7 @@ const AllUsersList = () => {
         fState.renderSelect="CREATE";
         fState.editParam='';
 
-        driveRendering("CREATE", '', true);
+        driveRendering("CREATE", '');
 
         console.log("handleCreate:", fState.renderSelect, fState.editParam);
     }
@@ -190,7 +296,7 @@ const AllUsersList = () => {
         fState.editParam='';
         return (param);
     }
-    
+   
 console.log("Rendering", fState.renderSelect);
 
 if (fState.renderSelect === "LIST") {
@@ -221,20 +327,30 @@ if (fState.renderSelect === "LIST") {
                                 }
                                 <div key={user.id ? user.id : index}>
                                     <p style={styles.userEmail}>{user.email}</p>
-                            <p style={styles.userData}>{user.firstname} {user.lastname} ({user.shares} shares)</p>
+                                    <p style={styles.userData}>{user.firstname} {user.lastname} ({user.shares} shares)</p>
                                 </div>
                                 
                             </div>
                             
                             <button style={styles.button} id={user.id} onClick={handleEdit}>Edit</button>
-                            <button style={styles.button} id={user.id} onClick={handleSelect}>Select</button>
-                            <button style={styles.button} id={user.id} onClick={handleUnSelect}>Unselect</button>
+                            
+                            {
+                            isSelected(user.id)  
+                                ?
+                                <button style={styles.button} id={user.id} onClick={handleUnSelect}>Exclude</button>
+                                :
+                                <button style={styles.button} id={user.id} onClick={handleSelect}>Include</button>
+                            }
+
                         </div>    
                             <hr className="App-horizontal-divider" />
                         </div>
                     ))
                 }
                 <button style={styles.buttonwide} onClick={handleCreate}>Create new user</button>
+
+                <button style={styles.buttonwide} onClick={handleUpdateMtg}>Update meeting</button>
+
             </div>
         )
     )

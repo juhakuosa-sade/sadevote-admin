@@ -12,7 +12,7 @@ import '@aws-amplify/ui/dist/style.css';
 
 import Home from "./pages/Home";
 import MeetingsList from "./pages/MeetingsList";
-import AllUsersList from "./pages/AllUsersList";
+import UsersList from "./pages/UsersList";
 import TopicsList from "./pages/TopicsList";
 import TodoData from "./pages/TodoData";
 
@@ -157,7 +157,7 @@ class App extends Component {
                                     <Route exact path={pageHome} component={Home} />
                                     <Route path={pageMeetings} component={MeetingsList} cbfn={()=>{this.enableContentButtons()}} />
                                     <Route path={pageTopics} component={TopicsList} />
-                                    <Route path={pageUsers} component={AllUsersList} />
+                                    <Route path={pageUsers} component={UsersList} />
                                     <Route path={pageTodos} component={TodoData} />
                                 </Switch>
                             </div>
