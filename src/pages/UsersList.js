@@ -102,7 +102,7 @@ const UsersList = () => {
         } catch (err) { console.log('error updating meeting:', err) }
 
         return ret;
-   }
+    }
 
     const driveRendering = ({mode, param}) => {
         /* set some shit to state so that it causes rendering! */
@@ -138,7 +138,6 @@ const UsersList = () => {
         fState.editParam=id;
 
         const arr = [...mtgState.users, id]; 
-        //setMtgState({ users: [...arr]});
         setMtgState({ ...mtgState, users: [...arr]});
     
         driveRendering("LIST", id);
@@ -154,7 +153,6 @@ const UsersList = () => {
         fState.editParam=id;
 
         const arr = mtgState.users.filter(item => item !== id);     
-        //setMtgState({ users: [...arr]});
         setMtgState({ ...mtgState, users: [...arr]});
     
         driveRendering("LIST", id);

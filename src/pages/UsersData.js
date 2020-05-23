@@ -152,13 +152,6 @@ const UsersData = ({itemId, updateUsersList}) => {
         return ret;
     }
 
-    /*
-    function clearState() {
-        userInitialState.id = generateId();
-        setFormState(userInitialState);
-    }
-    */
-
     function disablePrefill() {
         setUsePrefill(false);
     }

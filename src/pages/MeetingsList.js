@@ -149,7 +149,7 @@ if (fState.renderSelect === "LIST") {
                                     <p style={styles.meetingDescription}>{meeting.description}</p>
                                 </div>
                             </div>
-                            <button style={styles.button} id={meeting.id} onClick={handleEdit}>Edit</button>
+                            <button style={styles.button} id={meeting.id} name={meeting.name} desc={meeting.description} onClick={handleEdit}>Edit</button>
                             <button style={styles.button} id={meeting.id} onClick={handleDelete}>Delete</button>
                             <button style={styles.button} id={meeting.id} name={meeting.name} desc={meeting.description} onClick={handleSelect}>Select</button>
                         </div>    
