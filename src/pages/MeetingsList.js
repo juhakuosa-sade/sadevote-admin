@@ -14,7 +14,6 @@ import { deleteMeeting } from '../graphql/mutations'
 const initState = {
     renderSelect : "LIST",
     editParam : "",
-    doRender : false
 };
 
 const MeetingsList = ({cbfn}) => {
@@ -64,7 +63,6 @@ const MeetingsList = ({cbfn}) => {
         /* set some shit to state so that it causes rendering! */
         setState({renderSelect: mode});
         setState({editParam : param});
-        setState({doRender : doit});
         console.log("Rendering for", uiState.renderSelect);
     }
 
@@ -78,11 +76,10 @@ const MeetingsList = ({cbfn}) => {
 
         fState.renderSelect="EDIT";
         fState.editParam=id;
-        fState.doRender=true;
 
         driveRendering("EDIT", id, true);
 
-        console.log("handleEdit:", fState.renderSelect, fState.editParam, fState.doRender);
+        console.log("handleEdit:", fState.renderSelect, fState.editParam);
     }
     
     const handleSelect = (event) => {
@@ -95,11 +92,10 @@ const MeetingsList = ({cbfn}) => {
 
         fState.renderSelect="SELECT";
         fState.editParam=id;
-        fState.doRender=true;
 
         driveRendering("SELECT", id, true);
 
-        console.log("handleSelect:", fState.renderSelect, fState.editParam, fState.doRender);
+        console.log("handleSelect:", fState.renderSelect, fState.editParam);
 
     }
 
@@ -108,7 +104,6 @@ const MeetingsList = ({cbfn}) => {
 
         fState.renderSelect="DELETE";
         fState.editParam=id;
-        fState.doRender=true;
 
         driveRendering("DELETE", id, true);
 
@@ -119,11 +114,10 @@ const MeetingsList = ({cbfn}) => {
 
         fState.renderSelect="CREATE";
         fState.editParam='';
-        fState.doRender=true;
 
         driveRendering("CREATE", '', true);
 
-        console.log("handleCreate:", fState.renderSelect, fState.editParam, fState.doRender);
+        console.log("handleCreate:", fState.renderSelect, fState.editParam);
     }
     
     function resetRenderSelection() {
@@ -155,7 +149,7 @@ if (fState.renderSelect === "LIST") {
                                     <p style={styles.meetingDescription}>{meeting.description}</p>
                                 </div>
                             </div>
-                            <button style={styles.button} id={meeting.id} onClick={handleEdit}>Edit</button>
+                            <button style={styles.button} id={meeting.id} name={meeting.name} desc={meeting.description} onClick={handleEdit}>Edit</button>
                             <button style={styles.button} id={meeting.id} onClick={handleDelete}>Delete</button>
                             <button style={styles.button} id={meeting.id} name={meeting.name} desc={meeting.description} onClick={handleSelect}>Select</button>
                         </div>    

@@ -39,14 +39,14 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     const selectedMeeting = getSelectedMeeting();
     var listedTopics = getListedTopics();
 
-    async function updateMeetingData(id) {
+    async function addUpdateMeetingData(id) {
         let ret = null;
         try {
             const mtg = await API.graphql(graphqlOperation(getMeeting, {id: selectedMeeting.id}));
             let meeting = {...mtg.data.getMeeting}
             listedTopics = [...listedTopics, topicState.id];
             meeting.topics = [...listedTopics];
-            console.log('updateMeetingData:', meeting)
+            console.log('addUpdateMeetingData:', meeting)
             ret = await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
         } catch (err) { console.log('error updating meeting:', err) }
         return ret;
@@ -199,17 +199,25 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             console.log("FILTER: ", filter);
     
             //fetch the needed voting options
-            const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter}))
-            const votingOptionsList = votingOptionData.data.listVotingOptions.items
-       
-            console.log("prefillVotingOptions", votingOptionsList);
-            var cats = [];
-            votingOptionsList.forEach(element => {
-                const cat = { votingOptionId: element.id, catNumber: element.option_number, catText: element.option_text };
-                cats = [...cats, {...cat}]
-            });
-            setCats(cats);
-            return votingOptionData;
+            try {
+                const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter}));
+                //const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions));
+                var votingOptionsList = votingOptionData.data.listVotingOptions.items; 
+                votingOptionsList.sort(function(a,b){
+                    return parseInt(a.option_number) - parseInt(b.option_number);
+                   })     
+            
+                console.log("prefill votingOptionsList", votingOptionsList);
+                var cats = [];
+                votingOptionsList.forEach(element => {
+                    const cat = { votingOptionId: element.id, catNumber: element.option_number, catText: element.option_text };
+                    cats = [...cats, {...cat}]
+                });
+                setCats(cats);
+                return votingOptionData;
+            } catch (error) {
+                console.log("Error fetching voting options:", error);
+            }
         };
        
         if (usePrefill && idArray.length>0) { //attempt to fetch with empty filter will cause DynamoDB error
@@ -259,16 +267,15 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             })
 
         topic.voting_options_count = index;
-        setTopicState({ ...topic});
+        setTopicState({ ...topic });
         setTopics([...topics, topic]);
 
-        updateMeetingData(topic.id); // add the new topic to meeting topics list for selected meeting
+        // add the new topic to meeting topics list for selected meeting and update DynamoDB table
+        addUpdateMeetingData(topic.id); 
 
         // This will execute the callback and return to TopicsList if db operation succeeded
         setCbFunc( ret = await API.graphql(graphqlOperation(createTopic, {input: topic})));
-        
-        // clearState();
-   
+           
         } catch (err) {
             console.log('error creating topic:', err);
         }
@@ -314,9 +321,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         // This will execute the callback and return to TopicsList if db operation succeeded
         setCbFunc( ret = await API.graphql(graphqlOperation(updateTopic, {input: topic})));
 
-        //clearState();
-
-
         } catch (err) {
             console.log('error creating topic:', err);
         }
@@ -344,20 +348,31 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             setCats(cats);
         }
 
-        const topic = { ...topicState }
+        var topic = { ...topicState }
         if (topic.voting_options_count === 1) {
             topic.voting_options = [];
             clearCatState();
         }
         else {
-            const tpc = { id: id }
-            console.log("Deleting", tpc.id, "from DynamoDb table")
-            await API.graphql(graphqlOperation(deleteVotingOption, {input: tpc}))
-
-            topic.voting_options = topic.voting_options.filter(item => item !== id);
-            topic.voting_options_count = topic.voting_options.length;
+            try {
+                const vo = { id: id }
+                console.log("Deleting", vo.id, "from DynamoDb table")
+                await API.graphql(graphqlOperation(deleteVotingOption, {input: vo}))
+            } catch (error) {
+                console.log("Error deleting from DynamoDb table", error); 
+            }
+            
+            try {
+                topic.voting_options = topic.voting_options.filter(item => item !== id);
+                topic.voting_options_count = topic.voting_options.length;
+                await API.graphql(graphqlOperation(updateTopic, {input: topic}))
+            } catch (error) {
+                console.log("Error updating topic to DynamoDb table", error); 
+            }
+            
         }
-        setTopicState({ ...topic});
+        console.log("topic after deleting ", id, ":", topic); 
+        setTopicState({ ...topic });
 
         console.log("handleDelete catState", catState);
         console.log("handleDelete topicState.voting_options", topicState.voting_options);

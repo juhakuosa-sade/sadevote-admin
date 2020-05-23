@@ -26,10 +26,11 @@ const MeetingData = ({itemId, updateMeetingsList}) => {
        fetchMeetings()
     }, []);
 
-    useEffect(() => { 
+    useEffect(() => {             
+
         // do after mounting   
-            enablePrefill();
             setMeetingState({...meetingInitialState});
+            enablePrefill();
         // do before unmounting
         return () => {
             restoreState();
@@ -39,16 +40,15 @@ const MeetingData = ({itemId, updateMeetingsList}) => {
     useEffect(() => {
         function preFillForm(itemId) {
             console.log("preFillForm", itemId)
-            var mtg = {...meetingInitialState};
-            meetings.forEach(meeting => {
-            if (itemId === meeting.id) {
-                console.log("preFillForm: found it!");
+
+            const mtg = meetings.find(item => item.id === itemId);
+            if (mtg && (mtg.id === itemId)) {
+                setMeetingState(mtg);
                 setUseUpdate(true);
-                mtg = {...meeting};
+            } else {
+                setMeetingState({...meetingInitialState});
             }
-            });
             
-            setMeetingState(mtg);
         }
 
         if (usePrefill && itemId) {
