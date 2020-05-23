@@ -29,13 +29,10 @@ const MeetingsList = ({cbfn}) => {
     }, [])
 
     function updateFetch() {
-        console.log("updateFetch()")
         fetchMeetings();
     }
         
     async function fetchMeetings() {
-        console.log("fetchMeetings()")
-
         setIsLoading(true)
         try {
             const meetingData = await API.graphql(graphqlOperation(listMeetings))
@@ -46,7 +43,6 @@ const MeetingsList = ({cbfn}) => {
     }
 
     async function delMeeting(id)  {
-        console.log('deleting meeting:', id);
         const mtg = {
             id: id,
           };
@@ -72,14 +68,11 @@ const MeetingsList = ({cbfn}) => {
         const desc = event.target.getAttribute('desc');
 
         setSelectedMeeting(id, name, desc);
-        console.log("WTF", cbfn);
 
         fState.renderSelect="EDIT";
         fState.editParam=id;
 
         driveRendering("EDIT", id, true);
-
-        console.log("handleEdit:", fState.renderSelect, fState.editParam);
     }
     
     const handleSelect = (event) => {
@@ -88,15 +81,11 @@ const MeetingsList = ({cbfn}) => {
         const desc = event.target.getAttribute('desc');
 
         setSelectedMeeting(id, name, desc);
-        console.log("WTF", cbfn);
 
         fState.renderSelect="SELECT";
         fState.editParam=id;
 
         driveRendering("SELECT", id, true);
-
-        console.log("handleSelect:", fState.renderSelect, fState.editParam);
-
     }
 
     const handleDelete = (event) => {
@@ -106,8 +95,6 @@ const MeetingsList = ({cbfn}) => {
         fState.editParam=id;
 
         driveRendering("DELETE", id, true);
-
-        console.log("handleDelete", id);
     }
 
     const handleCreate = (event) => {
@@ -116,8 +103,6 @@ const MeetingsList = ({cbfn}) => {
         fState.editParam='';
 
         driveRendering("CREATE", '', true);
-
-        console.log("handleCreate:", fState.renderSelect, fState.editParam);
     }
     
     function resetRenderSelection() {
@@ -127,7 +112,7 @@ const MeetingsList = ({cbfn}) => {
         return (param);
     }
     
-console.log("Rendering", fState.renderSelect);
+//console.log("Rendering", fState.renderSelect);
 
 if (fState.renderSelect === "LIST") {
     return (

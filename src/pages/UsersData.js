@@ -20,8 +20,6 @@ const userInitialState = {
     shares: '',
     present: false
 }
-//TODO: Prefill UI
-//TODO: Nysvate UI
 
 const UsersData = ({itemId, updateUsersList}) => {
     const [formState, setFormState] = useState(userInitialState)
@@ -31,7 +29,6 @@ const UsersData = ({itemId, updateUsersList}) => {
     const [cbfunc, setCbFunc] = useState(false);
 
     const selectedMeeting = getSelectedMeeting();
-  //  var listedUsers = getListedUsers();
 
     useEffect(() => {
         fetchUsers()
@@ -57,7 +54,6 @@ const UsersData = ({itemId, updateUsersList}) => {
 
     useEffect(() => {
         function preFillForm(itemId) {
-            console.log("preFillForm", itemId)
             var usr = {...userInitialState};
             users.forEach(user => {
             if (itemId === user.id) {
@@ -85,10 +81,8 @@ const UsersData = ({itemId, updateUsersList}) => {
         try {
             const mtg = await API.graphql(graphqlOperation(getMeeting, {id: selectedMeeting.id}));
             let meeting = {...mtg.data.getMeeting}
-            //listedUsers = [...listedUsers, id];
             const listedUsers = [...meeting.users, id];
             meeting.users = [...listedUsers];
-            console.log('updateMeetingData:', meeting)
             ret = await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
         } catch (err) { console.log('error updating meeting:', err) }
         return ret;
@@ -106,13 +100,11 @@ const UsersData = ({itemId, updateUsersList}) => {
         let ret = null;
         try {
             if (!formState.id || !formState.email) {
-                console.log('error creating user: ID = ',formState.id);
-                console.log('error creating user: email = ',formState.email);
-                return
+                console.log('error creating user:',formState);
+                return ret
             }
             const user = { ...formState }
             if ((user.shares<0) || (user.shares===null) || (user.shares==='')) user.shares = 0;
-            console.log('creating user:', user)
             
             setUsers([...users, user])
             
@@ -136,9 +128,8 @@ const UsersData = ({itemId, updateUsersList}) => {
         let ret = null;
         try {
             if (!formState.id || !formState.email) {
-                console.log('error creating user: ID = ',formState.id);
-                console.log('error creating user: email = ',formState.email);
-                return
+                console.log('error creating user:',formState);
+                return ret
             }
             const user = { ...formState }
             setUsers([...users, user]);
@@ -214,15 +205,6 @@ const UsersData = ({itemId, updateUsersList}) => {
                 :
                 <button style={styles.button} onClick={addUser}>Create User</button>
                 }
-                {
-                    users.map((user, index) => (
-                        <div key={user.id ? user.id : index} style={styles.user}>
-                            <p style={styles.userName}>{user.id} {user.firstname} {user.lastname}</p>
-                            <p style={styles.userDescription}>{user.email}</p>
-                            <p style={styles.userDescription}>{user.shares} shares </p>
-                        </div>
-                    ))
-                }
             </div>
         )
     )
@@ -235,13 +217,14 @@ UsersData.propTypes = {
 
 const styles = {
     container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 5 },
-    user: {  fontSize: 12, marginBottom: 15 },
-    input: { border: 'none', backgroundColor: '#ddd', marginBottom: 10, padding: 8, fontSize: 12 },
-    inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 10, padding: 8, fontSize: 12 },
+    rowcontainer: { alignItems: 'right', color: 'black', backgroundColor:'#ddd', width: 396, margin: '0 0', display: 'flex', flexDirection: 'row', padding: 2 },
+    input: { border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 12 },
+    inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 2, padding: 8, fontSize: 12 },
     userName: { fontSize: 12, fontWeight: 'bold' },
     userDescription: { fontSize: 12, marginBottom: 0 },
     info: { justifyContent: 'center', color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' },
-    button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '12px 0px' }
+    button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginTop: 2, marginBottom: 8, padding: '12px 0px' },
 }
+
 
 export default UsersData;
