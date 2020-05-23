@@ -93,7 +93,6 @@ const MeetingData = ({itemId, updateMeetingsList}) => {
             if (!meetingState.name || !meetingState.description) return
             
             const meeting = { ...meetingState };
-            console.log("TOPIC MTGSTATE",meeting.topics)
             setMeetings([...meetings, meeting]);
             clearState();
             await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));

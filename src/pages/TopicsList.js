@@ -149,7 +149,7 @@ const TopicsList = () => {
         return (param);
     }
     
-console.log("Rendering", fState.renderSelect);
+//console.log("Rendering", fState.renderSelect);
 
 if (fState.renderSelect === "LIST") {
     return (

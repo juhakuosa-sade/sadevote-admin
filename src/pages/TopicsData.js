@@ -46,7 +46,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             let meeting = {...mtg.data.getMeeting}
             listedTopics = [...listedTopics, topicState.id];
             meeting.topics = [...listedTopics];
-            console.log('addUpdateMeetingData:', meeting)
             ret = await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
         } catch (err) { console.log('error updating meeting:', err) }
         return ret;
@@ -75,8 +74,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         const updatedCats = [...catState];
         updatedCats[e.target.dataset.idx][e.target.className] = e.target.value;
         setCatState(updatedCats);
-        console.log("handleCatChange:catState", {...catState});
-        console.log("handleCatChange:catState.length:", catState.length);
     };
 
 /** Voting options */
@@ -86,12 +83,10 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         let ret = null;
         try {
             if (!(votingOptionToAdd.id)) {
-                console.log('error creating votingOption: ID = ',votingOptionToAdd.id);
-                console.log('error creating votingOption: text = ',votingOptionToAdd.option_text);
+                console.log('error creating votingOption:',votingOptionToAdd);
                 return
             }
             const votingOption = { ...votingOptionToAdd }
-            console.log('creating votingOption:', votingOption)
             ret = await API.graphql(graphqlOperation(createVotingOption, {input: votingOption}))
         } catch (err) {
             console.log('error creating votingOption:', err)
@@ -103,12 +98,10 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         let ret = null;
         try {
             if (!(votingOptionToAdd.id)) {
-                console.log('error creating votingOption: ID = ',votingOptionToAdd.id);
-                console.log('error creating votingOption: text = ',votingOptionToAdd.option_text);
+                console.log('error creating votingOption:',votingOptionToAdd);
                 return
             }
             const votingOption = { ...votingOptionToAdd }
-            console.log('updating votingOption:', votingOption)
             ret = await API.graphql(graphqlOperation(updateVotingOption, {input: votingOption}))
         } catch (err) {
             console.log('error updating votingOption:', err)
@@ -164,7 +157,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     /***** PREFILL TOPIC FIELDS *****/
     useEffect(() => {
         function preFillForm(itemId) {
-            console.log("preFillForm", itemId)
             var tpc = {...topicInitialState};
             topics.forEach(topic => {
             if (itemId === topic.id) {
@@ -196,7 +188,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
                 const query = {id: criteria};
                 filter.or = [...filter.or, query];
             });  
-            console.log("FILTER: ", filter);
     
             //fetch the needed voting options
             try {
@@ -207,7 +198,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
                     return parseInt(a.option_number) - parseInt(b.option_number);
                    })     
             
-                console.log("prefill votingOptionsList", votingOptionsList);
                 var cats = [];
                 votingOptionsList.forEach(element => {
                     const cat = { votingOptionId: element.id, catNumber: element.option_number, catText: element.option_text };
@@ -248,8 +238,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         let ret = null;
         try {
         if (!topicState.id || !topicState.topic_number) {
-            console.log('error creating topic: ID = ',topicState.id);
-            console.log('error creating topic: title = ',topicState.topic_title);
+            console.log('error creating topic:',topicState);
             return
         }
         const topic = { ...topicState }
@@ -258,7 +247,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         topic.voting_options = [];
         catState.forEach(element => 
             {
-                console.log("foreach: ", index, element.catNumber, element.catText);
                 if ((element.catNumber>0) && (element.catText.length>0)) {
                     composeVotingOption(index++, generateId());
                     topic.voting_options = [...topic.voting_options, votingOptionToAdd.id]
@@ -286,8 +274,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         let ret = null;
         try {
         if (!topicState.id || !topicState.topic_number) {
-            console.log('error creating topic: ID = ',topicState.id);
-            console.log('error creating topic: title = ',topicState.topic_title);
+            console.log('error creating topic:',topicState);
             return
         }
         const topic = { ...topicState }
@@ -296,7 +283,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         topic.voting_options = [];
         catState.forEach(element => 
             {
-                console.log("foreach: ", index, element.catNumber, element.catText);
                 if ((element.catNumber>0) && (element.catText.length>0)) {
                     if (element.votingOptionId) {
                         composeVotingOption(index++, element.votingOptionId);
@@ -310,7 +296,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
                     } 
                 }
                 else {
-                    console.log("foreach skipping: ", index, element.catNumber, element.catText);
+                    console.log("skipping cat: ", index, element.catNumber, element.catText);
                 }
             })
 
@@ -339,12 +325,9 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     //const handleDelete = (event) => {
         let id = event.target.getAttribute('id'); 
         let num = event.target.getAttribute('num'); 
-        console.log("handleDelete", id);
 
         if (id === '') {
-            console.log("handleDelete CAT1:", num, parseInt(num));
             const cats = catState.filter(item => item.catNumber !== parseInt(num));
-            console.log("handleDelete CAT3", cats);
             setCats(cats);
         }
 
@@ -356,7 +339,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         else {
             try {
                 const vo = { id: id }
-                console.log("Deleting", vo.id, "from DynamoDb table")
                 await API.graphql(graphqlOperation(deleteVotingOption, {input: vo}))
             } catch (error) {
                 console.log("Error deleting from DynamoDb table", error); 
@@ -371,11 +353,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             }
             
         }
-        console.log("topic after deleting ", id, ":", topic); 
         setTopicState({ ...topic });
-
-        console.log("handleDelete catState", catState);
-        console.log("handleDelete topicState.voting_options", topicState.voting_options);
 
     }
 

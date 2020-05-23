@@ -57,12 +57,10 @@ const UsersList = () => {
     }, [selectedMeeting.id, mtgFetchAllowed])
 
     function updateFetch() {
-        console.log("updateFetch()")
         fetchAllUsers();
     }
     
     async function fetchAllUsers() {
-        console.log("fetchUsers()")
 
         setIsLoading(true)
         try {
@@ -77,7 +75,6 @@ const UsersList = () => {
     }
 
     async function delUser(id)  {
-        console.log('deleting user:', id);
         const mtg = {
             id: id,
           };
@@ -97,7 +94,6 @@ const UsersList = () => {
 
         try {
             const meeting = {...mtgState}
-            console.log('updateMeetingData:', meeting)
             ret = await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
         } catch (err) { console.log('error updating meeting:', err) }
 
@@ -114,7 +110,6 @@ const UsersList = () => {
     function isSelected(id) {
        if (mtgState) {
             const item = mtgState.users.find(item => item === id);     
-            console.log("isSelected", id, item)
             if (item === id) return true
         }
         return false      
@@ -127,8 +122,6 @@ const UsersList = () => {
         fState.editParam=id;
 
         driveRendering("EDIT", id);
-
-        console.log("handleEdit:", fState.renderSelect, fState.editParam);
     }
 
     const handleSelect = (event) => {
@@ -141,9 +134,6 @@ const UsersList = () => {
         setMtgState({ ...mtgState, users: [...arr]});
     
         driveRendering("LIST", id);
-
-        console.log("handleSelect:", fState.renderSelect, fState.editParam);
-
     }
 
     const handleUnSelect = (event) => {
@@ -156,9 +146,6 @@ const UsersList = () => {
         setMtgState({ ...mtgState, users: [...arr]});
     
         driveRendering("LIST", id);
-
-        console.log("handleSelect:", fState.renderSelect, fState.editParam);
-
     }
 
     const handleUpdateMtg = (event) => {
@@ -169,8 +156,6 @@ const UsersList = () => {
         fState.editParam='';
 
         driveRendering("LIST", '');
-
-        console.log("handleUpdateMtg");
     }
 
     const handleCreate = (event) => {
@@ -179,8 +164,6 @@ const UsersList = () => {
         fState.editParam='';
 
         driveRendering("CREATE", '');
-
-        console.log("handleCreate:", fState.renderSelect, fState.editParam);
     }
     
     function resetRenderSelection() {
@@ -190,7 +173,7 @@ const UsersList = () => {
         return (param);
     }
    
-console.log("Rendering", fState.renderSelect);
+//console.log("Rendering", fState.renderSelect);
 
 if (fState.renderSelect === "LIST") {
     return (

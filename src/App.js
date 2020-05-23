@@ -131,7 +131,7 @@ class App extends Component {
                         <button style={styles.button} 
                                 hidden = {this.state.contentButtonsDisabled} 
                                 onClick={this.goUsers}>Users</button>
-                        <button style={styles.button} onClick={this.goTodos}>Todos</button>
+                        <button hidden={true} style={styles.button} onClick={this.goTodos}>Todos</button>
                         <hr/>
                         <button style={styles.button} onClick={() => signOut()}>Sign out</button>  
                         <p/>
