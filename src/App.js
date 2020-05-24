@@ -14,12 +14,14 @@ import Home from "./pages/Home";
 import MeetingsList from "./pages/MeetingsList";
 import UsersList from "./pages/UsersList";
 import TopicsList from "./pages/TopicsList";
+import RunMeeting from "./pages/Execution";
 import TodoData from "./pages/TodoData";
 
 const pageHome='/';
 const pageMeetings='/meetings';
 const pageTopics='/topics'
 const pageUsers='/users'
+const pageRun='/run'
 const pageTodos='/todos';
 
 
@@ -72,6 +74,7 @@ class App extends Component {
         this.goMeetings = this.goMeetings.bind(this);
         this.goTopics = this.goTopics.bind(this);
         this.goUsers = this.goUsers.bind(this);
+        this.goRun = this.goRun.bind(this);
         this.goTodos = this.goTodos.bind(this);
 
         this.enableContentButtons = this.enableContentButtons.bind(this);
@@ -105,6 +108,10 @@ class App extends Component {
         this.goPage(pageUsers)
     }
  
+    goRun() {
+        this.goPage(pageRun)
+    }
+
     goTodos() {
         this.goPage(pageTodos)
     }
@@ -133,6 +140,8 @@ class App extends Component {
                                 onClick={this.goUsers}>Users</button>
                         <button hidden={true} style={styles.button} onClick={this.goTodos}>Todos</button>
                         <hr/>
+                        <button style={styles.button} onClick={this.goRun}>Run</button>  
+                        <hr/>
                         <button style={styles.button} onClick={() => signOut()}>Sign out</button>  
                         <p/>
                     </div>  
@@ -158,6 +167,7 @@ class App extends Component {
                                     <Route path={pageMeetings} component={MeetingsList} cbfn={()=>{this.enableContentButtons()}} />
                                     <Route path={pageTopics} component={TopicsList} />
                                     <Route path={pageUsers} component={UsersList} />
+                                    <Route path={pageRun} component={RunMeeting} />
                                     <Route path={pageTodos} component={TodoData} />
                                 </Switch>
                             </div>

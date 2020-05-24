@@ -13,7 +13,7 @@ import { updateMeeting, createTopic, updateTopic  } from '../graphql/mutations'
 import { createVotingOption, updateVotingOption, deleteVotingOption} from '../graphql/mutations'
 
 
-const topicInitialState = {
+export const topicInitialState = {
     id: generateId(),
     topic_number: '',
     topic_title: '',
@@ -24,7 +24,7 @@ const topicInitialState = {
     voting_percentage: 0.0,
 }
 
-const votingOptionInitialState = {
+export const votingOptionInitialState = {
     topic_id: '',
     topic_number: '',
     id: '',
@@ -192,7 +192,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             //fetch the needed voting options
             try {
                 const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter}));
-                //const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions));
                 var votingOptionsList = votingOptionData.data.listVotingOptions.items; 
                 votingOptionsList.sort(function(a,b){
                     return parseInt(a.option_number) - parseInt(b.option_number);
