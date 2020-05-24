@@ -292,14 +292,14 @@ const RunMeeting = () => {
 const styles = {
     container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 0 },
     rowcontainer: { height:35, width: 400, alignItems: 'right', color: 'black', backgroundColor:'#777', margin: '0 0', display: 'flex', flexDirection: 'row', padding: 0 },
-    buttonrowcontainer: { width: 400, alignItems: 'center', color: 'black', marginBottom:4, display: 'flex', flexDirection: 'row', padding: 0 },
+    buttonrowcontainer: { width: 400, alignItems: 'center', color: 'black', marginBottom:8, marginTop:12, display: 'flex', flexDirection: 'row', padding: 0 },
     input: { resize:'none', border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 12 },
     inputTitle: { resize:'none',border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 14, fontWeight: 'bold' },
     inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 2, padding: 8, fontSize: 12 },
     votingText: { resize:'none', width: 300, border: 'none', backgroundColor: 'white', marginBottom: 1, marginRight:1, padding: 8, fontSize: 12 },
     votingCount: { resize:'none', width: 100, border: 'none', backgroundColor: 'white', marginBottom: 1, padding: 8, fontSize: 12 },
     info: { justifyContent: 'center', color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' },
-    button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginTop: 2, marginBottom: 8, padding: '12px 0px' },
+    button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginTop: 8, marginBottom: 8, padding: '12px 0px' },
     buttonLeft: { width: 200, backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginRight: 2, padding: '12px 0px' },
     buttonRight: { width: 200, backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginLeft: 2, padding: '12px 0px' },
 }
