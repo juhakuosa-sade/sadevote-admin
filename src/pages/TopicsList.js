@@ -41,10 +41,10 @@ const TopicsList = () => {
     }
 
     function updateFetchDelayed() {
-        fetchTopics();
+        //fetchTopics();
         setTimeout(() => {
             fetchTopics(); 
-        }, 3000);
+        }, 1000);
     }
 
     var topicIdList = [...''];

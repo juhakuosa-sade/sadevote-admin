@@ -14,7 +14,7 @@ import { createVotingOption, updateVotingOption, deleteVotingOption} from '../gr
 
 
 export const topicInitialState = {
-    id: generateId(),
+    id: '',
     topic_number: '',
     topic_title: '',
     topic_text: '',
@@ -159,17 +159,22 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         function preFillForm(itemId) {
             var tpc = {...topicInitialState};
             topics.forEach(topic => {
-            if (itemId === topic.id) {
-                console.log("preFillForm: found it!", topic);
-                setUseUpdate(true);
-                tpc = {...topic};
-            }
+                if (itemId === topic.id) {
+                    console.log("preFillForm: found it!", topic);
+                    setUseUpdate(true);
+                    tpc = {...topic};
+                }
             });
             setTopicState({...tpc});
         };
 
         if (usePrefill && itemId) {
             preFillForm(itemId);
+        } else if (!itemId) {
+            console.log("ITEMID", itemId)
+            var tpc = {...topicInitialState};
+            tpc.id = generateId();
+            setTopicState({...tpc});
         }
     }, [itemId, topics, usePrefill]);
 
