@@ -3,14 +3,12 @@ import '../App.css';
 
 import { API, graphqlOperation } from 'aws-amplify'
 
-import { listTopics, getTopic } from '../graphql/queries'
-import { getMeeting } from '../graphql/queries'
-import { listVotingOptions } from '../graphql/queries'
+import { listTopics, getMeeting, listVotingOptions } from '../graphql/queries'
+import { updateTopic  } from '../graphql/mutations'
 
 import { getSelectedMeeting } from '../App';
 import { meetingInitialState } from'./MeetingsData';
 import { topicInitialState } from'./TopicsData';
-import CatInputs from './CatInputs';
 
 
 const initState = {
@@ -21,7 +19,6 @@ const initState = {
 const RunMeeting = () => {
 
     const fState = initState ;
-    const [uiState, setUiState] = useState(initState);
 
     const [isLoading, setIsLoading] = useState(false);
     const [meetingState, setMeetingState] = useState();
@@ -31,42 +28,11 @@ const RunMeeting = () => {
     const [topicIndex, setTopicIndex] = useState(0);
     const [topicActivated, setTopicActivated] = useState(false);
     const [mtgFetchAllowed, setMtgFetchAllowed] = useState(true);
+    const [optFetchAllowed, setOptFetchAllowed] = useState(false);
 
     const [options, setOptions] = useState([]);
 
     const selectedMeeting = getSelectedMeeting();
-
-    /*
-const filter = {or: []}
-meeting.topics.forEach(element => {
-    const criteria = {eq: element};
-    const query = {id: criteria};
-    filter.or = [...filter.or, query];
-});              
-const tpcs = await API.graphql(graphqlOperation(listTopics, {id: id}));
-const topics = tpcs.data.listTopics.items;
-topics.sort(function(a,b){
-    return parseInt(a.topic_number) - parseInt(b.topic_number);
-    })  
-    */
-   /*
-const tpcs = await API.graphql(graphqlOperation(listTopics));
-const stopics = tpcs.data.listTopics.items;
-stopics.sort(function(a,b){
-    return parseInt(a.id) - parseInt(b.id);
-});
-
-const filter = {or: []}
-stopics.forEach(element => {
-    const criteria = {eq: element};
-    const query = {id: criteria};
-    filter.or = [...filter.or, query];
-});       
-const topics = stopics.filter(filter);
-topics.sort(function(a,b){
-    return parseInt(a.topic_number) - parseInt(b.topic_number);
-})  
-    */
 
     useEffect(() => 
     { 
@@ -112,14 +78,46 @@ topics.sort(function(a,b){
     { 
         const switchTopic = (index) => {
             setTopicState({...topics[index]});
+            setOptFetchAllowed(true);
         };        
         switchTopic(topicIndex); 
     }, [topicIndex, topics])
     
     useEffect(() => 
     { 
-       fetchOptions(topicState.voting_options); //fetch voting options 
-    }, [topicState])
+        async function fetchOptions() {
+
+            //create filter for fetching the needed voting options
+            const filter = {or: []}
+            topicState.voting_options.forEach(element => {
+                const criteria = {eq: element};
+                const query = {id: criteria};
+                filter.or = [...filter.or, query];
+            }); 
+
+            //fetch the needed voting options
+            try {
+                const optionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter}));
+                var optionsList = optionData.data.listVotingOptions.items; 
+                optionsList.sort(function(a,b){
+                    return parseInt(a.option_number) - parseInt(b.option_number);
+                    })
+                console.log("OPTIONS (sorted):", optionsList)
+                setOptions([...optionsList]);
+            } catch (error) {
+            console.log("Error fetching voting options:", error);
+            }
+            console.log("OPTIONS:", options)
+        }
+
+        console.log("fetchOPTIONS:", optFetchAllowed, topicState.id)
+
+        if ((optFetchAllowed) && (topicState.id) && (topicState.id.length>0)) {
+            setOptFetchAllowed(false);
+            fetchOptions(); //fetch voting options 
+        } 
+
+    }, [topicState, options, optFetchAllowed])
 
     function saveResults() {
         //TODO: Save results DB or local file 
@@ -130,57 +128,35 @@ topics.sort(function(a,b){
         return false;
     }
 
-function fetchOptions(optionIdArray) {
-
-}
-/*
-    const fetchOptions = async (idArray) => {
-        console.log("idArray length: ", idArray.length);
-
-        //create filter for fetching the needed voting options
-        const filter = {or: []}
-        idArray.forEach(element => {
-            const criteria = {eq: element};
-            const query = {id: criteria};
-            filter.or = [...filter.or, query];
-        });  
-
-        //fetch the needed voting options
+    async function updateActivation(state) {
+        const topic = { ...topicState };
+        topic.active = state;
         try {
-            const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter}));
-            var votingOptionsList = votingOptionData.data.listVotingOptions.items; 
-            votingOptionsList.sort(function(a,b){
-                return parseInt(a.option_number) - parseInt(b.option_number);
-                })     
-        
-            var cats = [];
-            votingOptionsList.forEach(element => {
-                const cat = { votingOptionId: element.id, catNumber: element.option_number, catText: element.option_text };
-                cats = [...cats, {...cat}]
-            });
-            setCats(cats);
-            return votingOptionData;
+            await API.graphql(graphqlOperation(updateTopic, {input: topic}))
         } catch (error) {
-            console.log("Error fetching voting options:", error);
+            console.log("error updating activation status", error);
         }
-    }
-   */    
-    const driveRendering = ({mode, param}) => {
-        /* set some shit to state so that it causes rendering! */
-        const drive = {
-            renderSelect: mode,
-            editParam : param,
-        }
-        setUiState(drive)
+        setTopicActivated(state);
     }
 
-    const handleTbd = (event) => {
-        let id = event.target.getAttribute('id');
+    const handleCloseVoting = (event) => {
+    //    let id = event.target.getAttribute('id');
 
-        fState.renderSelect="TBD";
+        updateActivation(false);
+
+        fState.renderSelect="SHOWTOPIC";
         fState.editParam='id';
 
-        driveRendering("TBD", id);
+    }
+
+    const handleOpenVoting = (event) => {
+    //    let id = event.target.getAttribute('id');
+
+        updateActivation(true);
+
+        fState.renderSelect="SHOWTOPIC";
+        fState.editParam='id';
+
     }
 
     const handleNext = (event) => {
@@ -188,16 +164,17 @@ function fetchOptions(optionIdArray) {
         const maxIndex = parseInt(meetingState.topics.length - 1); 
 
         let index = parseInt(topicIndex);
-        if (index < maxIndex - 1) {
+        if (index < maxIndex) {
             index++;
             setTopicIndex(index);
         } 
+        console.log("topics.length", meetingState.topics.length);
+        console.log("Max index:", maxIndex);
         console.log("Topic index:", index);
 
         fState.renderSelect="SHOWTOPIC";
         fState.editParam='id';
 
-       // driveRendering("SHOWTOPIC", id);
     }
 
     const handlePrev = (event) => {
@@ -213,7 +190,6 @@ function fetchOptions(optionIdArray) {
         fState.renderSelect="SHOWTOPIC";
         fState.editParam='id';
 
-       // driveRendering("SHOWTOPIC", id);
     }
 
     function resetRenderSelection() {
@@ -223,11 +199,12 @@ function fetchOptions(optionIdArray) {
         return (param);
     }
     
-    //console.log("Rendering", fState.renderSelect);
     if (!isMeetingSelected()) {
         fState.renderSelect="NOMEETING";
         fState.editParam='';
     }
+
+    // ********  UI ********
 
     if (fState.renderSelect === "SHOWTOPIC") {
         return (
@@ -237,69 +214,75 @@ function fetchOptions(optionIdArray) {
                     <div>Loading ...</div>
                 </div>
             ) : (
-                <div style={styles.container}>
-                <h3>Running Topic</h3>
-                <textarea
-                    style={styles.inputDisabled}
-                    value={topicState.id}
-                    placeholder="ID"
-                    readOnly={true}
-                    disabled={true}
-                    hidden={false}
-                />
-                <textarea
-                    readOnly={true}
-                    style={styles.input}
-                    value={topicState.topic_number}
-                    placeholder="Topic number"
-                />
-                <textarea
-                    readOnly={true}
-                    style={styles.input}
-                    value={topicState.topic_title}
-                    placeholder="Title"
-                />
-                <textarea
-                    readOnly={true}
-                    rows={10} 
-                    style={styles.input}
-                    value={topicState.topic_text}
-                    placeholder="Text"
-                />
-                
-                <h5>Voting options</h5>
-            
-                <button style={styles.button} onClick={handleNext}>Next topic</button> 
-                <button style={styles.button} onClick={handlePrev}>Previous topic</button> 
+                <div>
+                    <div style={styles.buttonrowcontainer}>
+                        <button style={styles.buttonLeft} onClick={handlePrev}>Previous topic</button>
+                        <button style={styles.buttonRight} onClick={handleNext}>Next topic</button> 
+                    </div> 
+                    <div style={styles.container}>
+                        <textarea
+                            style={styles.inputDisabled}
+                            value={topicState.id}
+                            placeholder="ID"
+                            readOnly={true}
+                            disabled={true}
+                            hidden={false}
+                            />
+                        <textarea
+                            readOnly={true}
+                            style={styles.inputTitle}
+                            value={`${topicState.topic_number}. ${topicState.topic_title}`}
+                            placeholder="Topic number"
+                            />
+                        <textarea
+                            readOnly={true}
+                            rows={10} 
+                            style={styles.input}
+                            value={topicState.topic_text}
+                            placeholder="Text"
+                            />
+
+                        <h5>Voting</h5>
+                        {
+                            options.map((option, index) => (
+                                <div key={option.id ? option.id : index} style={styles.rowcontainer}>
+                                    <textarea
+                                        readOnly={true}
+                                        style={styles.votingText}
+                                        value={`${option.option_number}. ${option.option_text}`}
+                                        placeholder="Voting option"
+                                        />
+                                    <textarea
+                                        readOnly={true}
+                                        style={styles.votingCount}
+                                        value={option.votes}
+                                        placeholder="Voting option"
+                                        />
+                                </div>
+                            ))
+                        }
+                         
+                        {
+                        topicActivated
+                        ?
+                        <button style={styles.button} onClick={handleCloseVoting}>Close voting</button>
+                        :
+                        <button style={styles.button} onClick={handleOpenVoting}>Open voting</button>
+                        }
                     
-                {
-                topicActivated
-                ?
-                <button style={styles.button} onClick={handleTbd}>Close voting</button>
-                :
-                <button style={styles.button} onClick={handleTbd}>Open voting</button>
-                }
-            
-            </div>
+                    </div>
+                </div>
             )
         )
     } 
-
-    else if (fState.renderSelect === "TBD") {
-        return (
-            <div style={styles.container}>
-                <h4>tbd...</h4>        
-            </div>
-            )    
-    }
 
     else /* if (fState.renderSelect === "NOMEETING") */ {
         resetRenderSelection();
 
         return (
         <div style={styles.container}>
-            <h4>No meeting selected.</h4>        
-            <h4>Select meeting first!</h4>        
+            <h5>No meeting selected.</h5>        
+            <h5>Select meeting first!</h5>        
         </div>
         )
         
@@ -307,270 +290,18 @@ function fetchOptions(optionIdArray) {
 }
 
 const styles = {
-    container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 5 },
-    rowcontainer: { alignItems: 'right', color: 'black', backgroundColor:'#ddd', width: 396, margin: '0 0', display: 'flex', flexDirection: 'row', padding: 2 },
-    input: { border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 12 },
+    container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 0 },
+    rowcontainer: { height:35, width: 400, alignItems: 'right', color: 'black', backgroundColor:'#777', margin: '0 0', display: 'flex', flexDirection: 'row', padding: 0 },
+    buttonrowcontainer: { width: 400, alignItems: 'center', color: 'black', marginBottom:4, display: 'flex', flexDirection: 'row', padding: 0 },
+    input: { resize:'none', border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 12 },
+    inputTitle: { resize:'none',border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 14, fontWeight: 'bold' },
     inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 2, padding: 8, fontSize: 12 },
-    input3: { border: 'none', backgroundColor: 'white', marginBottom: 0, padding: 8, fontSize: 12 },
+    votingText: { resize:'none', width: 300, border: 'none', backgroundColor: 'white', marginBottom: 1, marginRight:1, padding: 8, fontSize: 12 },
+    votingCount: { resize:'none', width: 100, border: 'none', backgroundColor: 'white', marginBottom: 1, padding: 8, fontSize: 12 },
     info: { justifyContent: 'center', color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' },
     button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginTop: 2, marginBottom: 8, padding: '12px 0px' },
-    button2: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginTop: 0, marginBottom: 0, padding: '10 8' }
+    buttonLeft: { width: 200, backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginRight: 2, padding: '12px 0px' },
+    buttonRight: { width: 200, backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginLeft: 2, padding: '12px 0px' },
 }
 
 export default RunMeeting;
-
-
-
-/*
-const RunMeeting = () => {
-
-    const [topics, setTopics] = useState([]);
-    const fState = initState ;
-    const [uiState, setState] = useState(initState);
-    const [isLoading, setIsLoading] = useState(false);
-    const [mtgFetchAllowed, setMtgFetchAllowed] = useState(true);
-    const [mtgState, setMtgState] = useState();
-    const [noMeetingSelected, setNoMeetingSelected] = useState(false);
-    const [topicState, setTopicState] = useState(topicInitialState)
-    const [currentIdx, setCurrentIdx] = useState(0);
-    const [useUpdate, setUseUpdate] = useState(false);
-    const [catState, setCatState] = useState([]);
-    const [usePrefill, setUsePrefill] = useState(true);
-
-
-
-    const selectedMeeting = getSelectedMeeting();
-    var topicIdList = [];
-
-
-    useEffect(() => 
-    { 
-       setState({doFetch : true});
-    }, [])
- 
-    useEffect(() => {
-        async function getMeetingTopics(id) {
-
-            try {
-                const mtg = await API.graphql(graphqlOperation(getMeeting, {id: id}));
-                const meeting = {...mtg.data.getMeeting}
-                setMtgState({...meeting}); 
-            } catch (error) {
-                console.log("Error in getting meeting topics ( getMeetingTopics(id) )", error);
-                setMtgState({...meetingInitialState}); 
-                setNoMeetingSelected(true); 
-            }
-        }
-
-        if (mtgFetchAllowed) {
-            setMtgFetchAllowed(false)
-            getMeetingTopics(selectedMeeting.id)
-        }
-
-    }, [selectedMeeting.id, mtgFetchAllowed])
-   
-    useEffect(() => {
-
-        const idArray = topicState.voting_options;
-
-        const fetchVotingOptions = async () => {
-            console.log("idArray length: ", idArray.length);
-
-            //create filter for fetching the needed voting options
-            const filter = {or: []}
-            idArray.forEach(element => {
-                const criteria = {eq: element};
-                const query = {id: criteria};
-                filter.or = [...filter.or, query];
-            });  
-    
-            //fetch the needed voting options
-            try {
-                const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter}));
-                var votingOptionsList = votingOptionData.data.listVotingOptions.items; 
-                votingOptionsList.sort(function(a,b){
-                    return parseInt(a.option_number) - parseInt(b.option_number);
-                   })     
-            
-                var cats = [];
-                votingOptionsList.forEach(element => {
-                    const cat = { votingOptionId: element.id, catNumber: element.option_number, catText: element.option_text };
-                    cats = [...cats, {...cat}]
-                });
-                setCats(cats);
-                return votingOptionData;
-            } catch (error) {
-                console.log("Error fetching voting options:", error);
-            }
-        };
-       
-        if (usePrefill && idArray && idArray.length>0) { //attempt to fetch with empty filter will cause DynamoDB error
-            fetchVotingOptions();
-        }
-        
-    }, [topicState.voting_options, usePrefill]);
-
-    const setCats = (cats) => {
-        setCatState([...cats]);
-    };
-
-    if (uiState.doFetch) 
-    { 
-        fetchTopics(); 
-        setState({doFetch : false}); 
-    }
-
-    //TODO: new fetchTopics based on using mtgState and topics filter
-    async function fetchTopics() {
-        console.log('fetchTopics')
-        setIsLoading(true)
-        try {
-            const meeting = await API.graphql(graphqlOperation(getMeeting, {id: selectedMeeting.id}));
-            topicIdList = [...meeting.data.getMeeting.topics]
-
-            const topicData = await API.graphql(graphqlOperation(listTopics))
-            const topics = topicData.data.listTopics.items
-
-            var filteredTopics = [...''];
-            topicIdList.forEach(element => {
-                topics.forEach(topic => {
-                    if (element === topic.id) {
-                        filteredTopics = [...filteredTopics, topic]
-                    }
-                });
-             });
-
-            setTopics(filteredTopics)
-            listedTopics = [];
-            filteredTopics.forEach(element => {
-                listedTopics = [...listedTopics, element.id]
-            });
-
-            const topic = await API.graphql(graphqlOperation(getTopic, {id: topicIdList[currentIdx]}));
-            setTopicState({ ...topic });
-            
-        } catch (err) { console.log('error fetching topics') }
-        setIsLoading(false)
-    
-    }
-
-    const driveRendering = ({mode, param}) => {
-        // set some shit to state so that it causes rendering!
-        const drive = {
-            renderSelect: mode,
-            editParam : param,
-        }
-        setState(drive)
-    }
-
-    const handleTbd = (event) => {
-        let id = event.target.getAttribute('id');
-
-        fState.renderSelect="TBD";
-        fState.editParam='id';
-
-        driveRendering("TBD", id);
-    }
-
-    function resetRenderSelection() {
-        const param = fState.editParam;
-        fState.renderSelect="SHOWTOPIC";
-        fState.editParam='';
-        return (param);
-    }
-    
-//console.log("Rendering", fState.renderSelect);
-if (noMeetingSelected) {
-    fState.renderSelect="NOMEETING";
-    fState.editParam='';
-}
-
-if (fState.renderSelect === "SHOWTOPIC") {
-    return (
-        isLoading ? (
-            <div style={styles.info}>
-                <p/>
-                <div>Loading ...</div>
-            </div>
-        ) : (
-            <div style={styles.container}>
-            <h3>Topic</h3>
-            <input
-                style={styles.inputDisabled}
-                value={topicState.id}
-                placeholder="ID"
-                readOnly={true}
-                disabled={true}
-                hidden={false}
-            />
-            <input
-                readOnly={true}
-                style={styles.input}
-                value={topicState.topic_number}
-                placeholder="Topic number"
-            />
-            <input
-                readOnly={true}
-                style={styles.input}
-                value={topicState.topic_title}
-                placeholder="Title"
-            />
-            <textarea
-                readOnly={true}
-                rows={10} 
-                style={styles.input}
-                value={topicState.topic_text}
-                placeholder="Text"
-            />
-            
-            <h5>Voting options</h5>
-           {
-            catState.map((val, idx) => (
-                <div key={"containerBox" + idx} style={styles.rowcontainer}>
-                    <CatInputs
-                        style={styles.input3}
-                        key={`cat-${idx}`}
-                        idx={idx}
-                        catState={catState}
-                    />
-                </div>
-
-            ))
-            }
-            <button style={styles.button} onClick={handleTbd}>NEXT</button> 
-            <button style={styles.button} onClick={handleTbd}>PREV</button> 
-                
-            {
-            useUpdate
-            ?
-            <button style={styles.button} onClick={handleTbd}>Activate</button>
-            :
-            <button style={styles.button} onClick={handleTbd}>Deactivate</button>
-            }
-        
-        </div>
-        )
-    )
-} 
-
-else if (fState.renderSelect === "TBD") {
-    return (
-        <div style={styles.container}>
-            <h4>tbd...</h4>        
-        </div>
-        )    
-}
-
-else if (fState.renderSelect === "NOMEETING")  {
-    resetRenderSelection();
-
-    return (
-    <div style={styles.container}>
-        <h4>No meeting selected.</h4>        
-        <h4>Select meeting first!</h4>        
-    </div>
-    )
-    
-}
-}
-*/
