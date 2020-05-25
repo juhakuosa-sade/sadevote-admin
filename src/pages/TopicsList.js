@@ -41,10 +41,10 @@ const TopicsList = () => {
     }
 
     function updateFetchDelayed() {
-        fetchTopics();
+        //fetchTopics();
         setTimeout(() => {
             fetchTopics(); 
-        }, 3000);
+        }, 1000);
     }
 
     var topicIdList = [...''];
@@ -99,7 +99,7 @@ const TopicsList = () => {
         return false;
     }
 
-    const driveRendering = ({mode, param, doit}) => {
+    const driveRendering = ({mode, param}) => {
         /* set some shit to state so that it causes rendering! */
         const drive = {
             renderSelect: mode,
@@ -116,7 +116,7 @@ const TopicsList = () => {
         fState.renderSelect="EDIT";
         fState.editParam=id;
 
-        driveRendering("EDIT", id, true);
+        driveRendering("EDIT", id);
 
         console.log("handleEdit:", fState.renderSelect, fState.editParam);
     }
@@ -127,7 +127,7 @@ const TopicsList = () => {
         fState.renderSelect="DELETE";
         fState.editParam=id;
 
-        driveRendering("DELETE", id, true);
+        driveRendering("DELETE", id);
 
         console.log("handleDelete", id);
     }
@@ -137,7 +137,7 @@ const TopicsList = () => {
         fState.renderSelect="CREATE";
         fState.editParam='';
 
-        driveRendering("CREATE", '', true);
+        driveRendering("CREATE", '');
 
         console.log("handleCreate:", fState.renderSelect, fState.editParam);
     }

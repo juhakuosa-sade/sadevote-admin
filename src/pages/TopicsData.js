@@ -13,8 +13,8 @@ import { updateMeeting, createTopic, updateTopic  } from '../graphql/mutations'
 import { createVotingOption, updateVotingOption, deleteVotingOption} from '../graphql/mutations'
 
 
-const topicInitialState = {
-    id: generateId(),
+export const topicInitialState = {
+    id: '',
     topic_number: '',
     topic_title: '',
     topic_text: '',
@@ -24,7 +24,7 @@ const topicInitialState = {
     voting_percentage: 0.0,
 }
 
-const votingOptionInitialState = {
+export const votingOptionInitialState = {
     topic_id: '',
     topic_number: '',
     id: '',
@@ -159,17 +159,22 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         function preFillForm(itemId) {
             var tpc = {...topicInitialState};
             topics.forEach(topic => {
-            if (itemId === topic.id) {
-                console.log("preFillForm: found it!", topic);
-                setUseUpdate(true);
-                tpc = {...topic};
-            }
+                if (itemId === topic.id) {
+                    console.log("preFillForm: found it!", topic);
+                    setUseUpdate(true);
+                    tpc = {...topic};
+                }
             });
             setTopicState({...tpc});
         };
 
         if (usePrefill && itemId) {
             preFillForm(itemId);
+        } else if (!itemId) {
+            console.log("ITEMID", itemId)
+            var tpc = {...topicInitialState};
+            tpc.id = generateId();
+            setTopicState({...tpc});
         }
     }, [itemId, topics, usePrefill]);
 
@@ -192,7 +197,6 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             //fetch the needed voting options
             try {
                 const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter}));
-                //const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions));
                 var votingOptionsList = votingOptionData.data.listVotingOptions.items; 
                 votingOptionsList.sort(function(a,b){
                     return parseInt(a.option_number) - parseInt(b.option_number);
