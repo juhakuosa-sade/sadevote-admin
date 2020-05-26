@@ -301,9 +301,11 @@ const RunMeeting = () => {
                             value={topicState.topic_text}
                             placeholder="Text"
                             />
-
-                        <h5>Voting</h5>
-                        {
+                        <div style={styles.rowcontainerClear}>
+                            <div style={styles.title}>VOTING </div>
+                            <div style={styles.indicator} hidden={!topicActivated}>ACTIVE</div>
+                        </div>
+                       {
                             options.map((option, index) => (
                                 <div key={option.id ? option.id : index} style={styles.rowcontainer}>
                                     <textarea
@@ -353,6 +355,9 @@ const styles = {
     container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 0 },
     rowcontainer: { height:35, width: 400, alignItems: 'right', color: 'black', backgroundColor:'#777', margin: '0 0', display: 'flex', flexDirection: 'row', padding: 0 },
     buttonrowcontainer: { width: 400, alignItems: 'center', color: 'black', marginBottom:8, marginTop:12, display: 'flex', flexDirection: 'row', padding: 0 },
+    rowcontainerClear: { alignItems: 'left', height:30, width: 400, display: 'flex', flexDirection: 'row', fontSize: 14, fontWeight: 'bold', marginTop: 16, marginBottom:2,  },
+    title: { justifyContent: 'left', border: 'none', color: 'white', margin: 4, fontSize: 14 },
+    indicator: { justifyContent: 'left', border: 'none', color: '#7fff8a', margin: 4, paddingLeft: 10, paddingRight:10, fontSize: 14 },
     input: { resize:'none', border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 12 },
     inputTitle: { resize:'none',border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 14, fontWeight: 'bold' },
     inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 2, padding: 8, fontSize: 12 },
