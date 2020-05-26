@@ -52,7 +52,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     }
 
 /** Cat */
-    const blankCat = { votingOptionId: '', catNumber: '', catText: '' };
+    const blankCat = { votingOptionId: '', catNumber: '', catText: '', catVotes: 0, changed: false };
     const [catState, setCatState] = useState([]);
 
     function clearCatState() {
@@ -73,6 +73,8 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     const handleCatChange = (e) => {
         const updatedCats = [...catState];
         updatedCats[e.target.dataset.idx][e.target.className] = e.target.value;
+        updatedCats[e.target.dataset.idx].changed = true;
+        console.log("updated cats", updatedCats)
         setCatState(updatedCats);
     };
 
@@ -102,7 +104,10 @@ const TopicsData = ({itemId, updateTopicsList}) => {
                 return
             }
             const votingOption = { ...votingOptionToAdd }
-            ret = await API.graphql(graphqlOperation(updateVotingOption, {input: votingOption}))
+            if (votingOption.unanimously_selected) {
+                votingOption.unanimously_selected = false;
+                ret = await API.graphql(graphqlOperation(updateVotingOption, {input: votingOption}))
+            }
         } catch (err) {
             console.log('error updating votingOption:', err)
         }
@@ -115,8 +120,11 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         votingOptionToAdd.id = id;
         votingOptionToAdd.option_number = catState[idx].catNumber;
         votingOptionToAdd.option_text = catState[idx].catText;
-        votingOptionToAdd.votes = 0;
-        votingOptionToAdd.unanimously_selected = false;
+//        votingOptionToAdd.votes = 0;
+        votingOptionToAdd.votes = catState[idx].catVotes;
+        votingOptionToAdd.unanimously_selected = catState[idx].changed;
+//        votingOptionToAdd.unanimously_selected = false;
+
         return votingOptionToAdd;
     }
 
@@ -204,7 +212,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             
                 var cats = [];
                 votingOptionsList.forEach(element => {
-                    const cat = { votingOptionId: element.id, catNumber: element.option_number, catText: element.option_text };
+                    const cat = { votingOptionId: element.id, catNumber: element.option_number, catText: element.option_text, catVotes: element.votes };
                     cats = [...cats, {...cat}]
                 });
                 setCats(cats);

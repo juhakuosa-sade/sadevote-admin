@@ -6,6 +6,7 @@ import '../App.css';
 const CatInputs = ({ idx, catState, handleCatChange }) => {
     const numId = `catNumber-${idx}`;
     const textId = `catText-${idx}`;
+    const voteId = `catVotes-${idx}`;
     catState[idx].catNumber = idx + 1;
     return (
         <div key={`cat-${idx}`} style={styles.container}>
@@ -27,6 +28,16 @@ const CatInputs = ({ idx, catState, handleCatChange }) => {
                 id={textId}
                 className="catText"
                 value={catState[idx].catText}
+                onChange={handleCatChange}
+            />   
+            <input
+                style={styles.input}
+                type="text"
+                name={voteId}
+                data-idx={idx}
+                id={voteId}
+                className="catVotes"
+                value={catState[idx].catVotes}
                 onChange={handleCatChange}
             />
         </div>
