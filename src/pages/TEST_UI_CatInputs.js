@@ -3,9 +3,10 @@ import PropTypes from 'prop-types';
 import '../App.css';
 
 
-const CatInputs = ({ idx, catState, handleCatChange }) => {
+const TEST_UI_CatInputs = ({ idx, catState, handleCatChange }) => {
     const numId = `catNumber-${idx}`;
     const textId = `catText-${idx}`;
+    const voteId = `catVotes-${idx}`;
     catState[idx].catNumber = idx + 1;
     return (
         <div key={`cat-${idx}`} style={styles.container}>
@@ -28,12 +29,22 @@ const CatInputs = ({ idx, catState, handleCatChange }) => {
                 className="catText"
                 value={catState[idx].catText}
                 onChange={handleCatChange}
-            />              
+            />   
+            <input
+                style={styles.input}
+                type="text"
+                name={voteId}
+                data-idx={idx}
+                id={voteId}
+                className="catVotes"
+                value={catState[idx].catVotes}
+                onChange={handleCatChange}
+            />
         </div>
     );
 };
 
-CatInputs.propTypes = {
+TEST_UI_CatInputs.propTypes = {
     idx: PropTypes.number,
     catState: PropTypes.array,
     handleCatChange: PropTypes.func,
@@ -46,4 +57,4 @@ const styles = {
 }
 
 
-export default CatInputs;
+export default TEST_UI_CatInputs;

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useCallback, useState } from 'react'
 import '../App.css';
 
 import { API, graphqlOperation } from 'aws-amplify'
 
 import { listTopics, getMeeting, listVotingOptions } from '../graphql/queries'
-import { updateTopic  } from '../graphql/mutations'
+import { updateTopic } from '../graphql/mutations'
+import { onUpdateVotingOption  } from '../graphql/subscriptions'
 
 import { getSelectedMeeting } from '../App';
 import { meetingInitialState } from'./MeetingsData';
@@ -26,11 +27,15 @@ const RunMeeting = () => {
     const [topics, setTopics] = useState([]);
     const [topicState, setTopicState] = useState(topicInitialState)
     const [topicIndex, setTopicIndex] = useState(0);
+
     const [topicActivated, setTopicActivated] = useState(false);
     const [mtgFetchAllowed, setMtgFetchAllowed] = useState(true);
     const [optFetchAllowed, setOptFetchAllowed] = useState(false);
 
     const [options, setOptions] = useState([]);
+    const [subscribed, setSubscribed] = useState(false);
+
+    const [subscription, setSubscription] = useState();
 
     const selectedMeeting = getSelectedMeeting();
 
@@ -85,7 +90,8 @@ const RunMeeting = () => {
     
     useEffect(() => 
     { 
-        async function fetchOptions() {
+        const fetchOptions = async () => {
+        //async function fetchOptions() {
 
             //create filter for fetching the needed voting options
             const filter = {or: []}
@@ -103,7 +109,8 @@ const RunMeeting = () => {
                     return parseInt(a.option_number) - parseInt(b.option_number);
                     })
                 console.log("OPTIONS (sorted):", optionsList)
-                setOptions([...optionsList]);
+                setOptions(optionsList);
+
             } catch (error) {
             console.log("Error fetching voting options:", error);
             }
@@ -117,7 +124,53 @@ const RunMeeting = () => {
             fetchOptions(); //fetch voting options 
         } 
 
-    }, [topicState, options, optFetchAllowed])
+    }, [topicState, options, setOptions, optFetchAllowed])
+
+    const updateVoting = useCallback((updatedOption, options) => {
+        const index = options.findIndex(option => option.id === updatedOption.id);
+        const newOptions = [...options];
+        newOptions[index] = updatedOption;
+        
+        console.log("NewOptions", newOptions);
+        setOptions([...newOptions]);  
+      }, [])
+          
+    useEffect(() => { 
+        return async () => {  
+            console.log("in clean-up", subscription, subscribed)
+          
+            if ((subscription) && (subscribed)) {
+                    console.log("unsubscribing subscription...", subscription)
+                    await subscription.unsubscribe();
+                    setSubscribed(false);
+                    setSubscription(undefined);
+                }
+            }
+    }, [subscribed, subscription]);
+
+    async function subscribeVotingProgress () {
+        setSubscribed(true);
+        const subscription = await API.graphql(graphqlOperation(onUpdateVotingOption)).subscribe({
+            next: resp => {
+                const votingOption = resp.value.data.onUpdateVotingOption;
+                console.log("update !!!", votingOption);
+                updateVoting(votingOption, options);
+                }
+        });
+        console.log("SUBSCRIBED:", subscription);
+        setSubscription(subscription);
+        return subscription;
+    };
+
+    async function unsubscribeVotingProgress() {
+        if ((subscription) && (subscribed)) {
+            console.log("unsubscribing subscription...", subscription)
+            await subscription.unsubscribe();
+            setSubscribed(false);
+            setSubscription(undefined);
+        }
+    }
+
 
     function saveResults() {
         //TODO: Save results DB or local file 
@@ -141,8 +194,8 @@ const RunMeeting = () => {
 
     const handleCloseVoting = (event) => {
     //    let id = event.target.getAttribute('id');
-
         updateActivation(false);
+        unsubscribeVotingProgress();
 
         fState.renderSelect="SHOWTOPIC";
         fState.editParam='id';
@@ -151,8 +204,8 @@ const RunMeeting = () => {
 
     const handleOpenVoting = (event) => {
     //    let id = event.target.getAttribute('id');
-
         updateActivation(true);
+        subscribeVotingProgress();
 
         fState.renderSelect="SHOWTOPIC";
         fState.editParam='id';
@@ -161,6 +214,10 @@ const RunMeeting = () => {
 
     const handleNext = (event) => {
         //let id = event.target.getAttribute('id');
+        updateActivation(false);
+        unsubscribeVotingProgress();
+        setOptions([]);
+
         const maxIndex = parseInt(meetingState.topics.length - 1); 
 
         let index = parseInt(topicIndex);
@@ -179,6 +236,9 @@ const RunMeeting = () => {
 
     const handlePrev = (event) => {
         //let id = event.target.getAttribute('id');
+        updateActivation(false);
+        unsubscribeVotingProgress();
+        setOptions([]);
 
         let index = parseInt(topicIndex);
         if (index > 0) {
@@ -241,9 +301,11 @@ const RunMeeting = () => {
                             value={topicState.topic_text}
                             placeholder="Text"
                             />
-
-                        <h5>Voting</h5>
-                        {
+                        <div style={styles.rowcontainerClear}>
+                            <div style={styles.title}>VOTING </div>
+                            <div style={styles.indicator} hidden={!topicActivated}>ACTIVE</div>
+                        </div>
+                       {
                             options.map((option, index) => (
                                 <div key={option.id ? option.id : index} style={styles.rowcontainer}>
                                     <textarea
@@ -293,6 +355,9 @@ const styles = {
     container: { width: 400, margin: '0 0', display: 'flex', flexDirection: 'column', padding: 0 },
     rowcontainer: { height:35, width: 400, alignItems: 'right', color: 'black', backgroundColor:'#777', margin: '0 0', display: 'flex', flexDirection: 'row', padding: 0 },
     buttonrowcontainer: { width: 400, alignItems: 'center', color: 'black', marginBottom:8, marginTop:12, display: 'flex', flexDirection: 'row', padding: 0 },
+    rowcontainerClear: { alignItems: 'left', height:30, width: 400, display: 'flex', flexDirection: 'row', fontSize: 14, fontWeight: 'bold', marginTop: 16, marginBottom:2,  },
+    title: { justifyContent: 'left', border: 'none', color: 'white', margin: 4, fontSize: 14 },
+    indicator: { justifyContent: 'left', border: 'none', color: '#7fff8a', margin: 4, paddingLeft: 10, paddingRight:10, fontSize: 14 },
     input: { resize:'none', border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 12 },
     inputTitle: { resize:'none',border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 14, fontWeight: 'bold' },
     inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 2, padding: 8, fontSize: 12 },
