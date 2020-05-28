@@ -31,7 +31,7 @@ export const votingOptionInitialState = {
     option_number: 0,
     option_text: '',
     votes: 0,
-    unanimously_selected: false,
+    changed: false,
 }
 
 const TopicsData = ({itemId, updateTopicsList}) => {
@@ -117,7 +117,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         votingOptionToAdd.option_number = catState[idx].catNumber;
         votingOptionToAdd.option_text = catState[idx].catText;
         votingOptionToAdd.votes = 0;
-        votingOptionToAdd.unanimously_selected = false;
+        votingOptionToAdd.changed = false;
         return votingOptionToAdd;
     }
 

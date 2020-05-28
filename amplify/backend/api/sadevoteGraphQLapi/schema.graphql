@@ -36,5 +36,5 @@ type VotingOption @model {
   option_number: Int!
   option_text: String
   votes: Int
-  unanimously_selected: Boolean
+  changed: Boolean
 }
