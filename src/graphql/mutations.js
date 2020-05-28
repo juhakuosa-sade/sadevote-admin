@@ -190,7 +190,7 @@ export const createVotingOption = /* GraphQL */ `
       option_number
       option_text
       votes
-      unanimously_selected
+      changed
     }
   }
 `;
@@ -206,7 +206,7 @@ export const updateVotingOption = /* GraphQL */ `
       option_number
       option_text
       votes
-      unanimously_selected
+      changed
     }
   }
 `;
@@ -222,7 +222,7 @@ export const deleteVotingOption = /* GraphQL */ `
       option_number
       option_text
       votes
-      unanimously_selected
+      changed
     }
   }
 `;

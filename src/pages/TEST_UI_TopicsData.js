@@ -31,7 +31,7 @@ export const votingOptionInitialState = {
     option_number: 0,
     option_text: '',
     votes: 0,
-    unanimously_selected: false,
+    changed: false,
 }
 
 const TEST_UI_TopicsData = ({itemId, updateTopicsList}) => {
@@ -104,8 +104,8 @@ const TEST_UI_TopicsData = ({itemId, updateTopicsList}) => {
                 return
             }
             const votingOption = { ...votingOptionToAdd }
-            if (votingOption.unanimously_selected) {
-                votingOption.unanimously_selected = false;
+            if (votingOption.changed) {
+                votingOption.changed = false;
                 ret = await API.graphql(graphqlOperation(updateVotingOption, {input: votingOption}))
             }
         } catch (err) {
@@ -122,8 +122,8 @@ const TEST_UI_TopicsData = ({itemId, updateTopicsList}) => {
         votingOptionToAdd.option_text = catState[idx].catText;
 //        votingOptionToAdd.votes = 0;
         votingOptionToAdd.votes = catState[idx].catVotes;
-        votingOptionToAdd.unanimously_selected = catState[idx].changed;
-//        votingOptionToAdd.unanimously_selected = false;
+        votingOptionToAdd.changed = catState[idx].changed;
+//        votingOptionToAdd.changed = false;
 
         return votingOptionToAdd;
     }

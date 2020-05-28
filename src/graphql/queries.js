@@ -132,7 +132,7 @@ export const getVotingOption = /* GraphQL */ `
       option_number
       option_text
       votes
-      unanimously_selected
+      changed
     }
   }
 `;
@@ -150,7 +150,7 @@ export const listVotingOptions = /* GraphQL */ `
         option_number
         option_text
         votes
-        unanimously_selected
+        changed
       }
       nextToken
     }

@@ -151,7 +151,7 @@ export const onCreateVotingOption = /* GraphQL */ `
       option_number
       option_text
       votes
-      unanimously_selected
+      changed
     }
   }
 `;
@@ -164,7 +164,7 @@ export const onUpdateVotingOption = /* GraphQL */ `
       option_number
       option_text
       votes
-      unanimously_selected
+      changed
     }
   }
 `;
@@ -177,7 +177,7 @@ export const onDeleteVotingOption = /* GraphQL */ `
       option_number
       option_text
       votes
-      unanimously_selected
+      changed
     }
   }
 `;
