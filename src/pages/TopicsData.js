@@ -12,6 +12,8 @@ import {  getMeeting, listTopics, listVotingOptions } from '../graphql/queries'
 import { updateMeeting, createTopic, updateTopic  } from '../graphql/mutations'
 import { createVotingOption, updateVotingOption, deleteVotingOption} from '../graphql/mutations'
 
+const DYNAMO_QUERY_MAX = 1000;
+
 
 export const topicInitialState = {
     id: '',
@@ -183,26 +185,42 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     useEffect(() => {
 
         const idArray = topicState.voting_options;
+        console.log("OPTIONSLIST0", idArray); 
 
         const fetchData = async () => {
             console.log("idArray length: ", idArray.length);
 
             //create filter for fetching the needed voting options
-            const filter = {or: []}
+            const jfilter = {or : []}
             idArray.forEach(element => {
-                const criteria = {eq: element};
-                const query = {id: criteria};
-                filter.or = [...filter.or, query];
+                const criteria = {eq : element};
+                const query = {id : criteria};
+                jfilter.or = [...jfilter.or, query];
             });  
+            /* QueryFilter format example
+            const jfilter = { 
+                or: [ 
+                    { id: { eq: "63f65e27-e865-4f13-8f76-a6c210a18e22"}},
+                    { id: { eq: "485f86cf-f9b0-487d-aacf-5d67120866dd"}},
+                    { id: { eq: "d1fabdd7-d49f-4ad5-997e-a9c5103d0bbd"}},
+                    { id: { eq: "122666c3-2e35-4bdc-8fd0-6bd1d29b1ce0"}},
+                    { id: { eq: "afa169f1-5940-4f90-a10f-c9c0eb4c426c"}},
+                    { id: { eq: "3114afea-363f-40e4-b628-270c0d26e2ce"}} 
+                ] };
+            */
     
             //fetch the needed voting options
             try {
-                const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter}));
-                var votingOptionsList = votingOptionData.data.listVotingOptions.items; 
+                
+                const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions, {filter: jfilter, limit: DYNAMO_QUERY_MAX}));
+                var votingOptionsList = votingOptionData.data.listVotingOptions.items;
+                
                 votingOptionsList.sort(function(a,b){
                     return parseInt(a.option_number) - parseInt(b.option_number);
                    })     
             
+                console.log("Query result", votingOptionsList); 
+
                 var cats = [];
                 votingOptionsList.forEach(element => {
                     const cat = { votingOptionId: element.id, catNumber: element.option_number, catText: element.option_text };
@@ -229,7 +247,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
     async function fetchTopics() {
         let ret = null;
         try {
-            const topicData = await API.graphql(graphqlOperation(listTopics))
+            const topicData = await API.graphql(graphqlOperation(listTopics, {limit: DYNAMO_QUERY_MAX}))
             const topics = topicData.data.listTopics.items
             setTopics(topics)
             ret = topics

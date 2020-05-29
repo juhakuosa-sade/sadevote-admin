@@ -12,6 +12,8 @@ import {  getMeeting, listTopics, listVotingOptions } from '../graphql/queries'
 import { updateMeeting, createTopic, updateTopic  } from '../graphql/mutations'
 import { createVotingOption, updateVotingOption, deleteVotingOption} from '../graphql/mutations'
 
+const DYNAMO_QUERY_MAX = 1000;
+
 
 export const topicInitialState = {
     id: '',
@@ -204,7 +206,7 @@ const TEST_UI_TopicsData = ({itemId, updateTopicsList}) => {
     
             //fetch the needed voting options
             try {
-                const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter}));
+                const votingOptionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter, limit: DYNAMO_QUERY_MAX}));
                 var votingOptionsList = votingOptionData.data.listVotingOptions.items; 
                 votingOptionsList.sort(function(a,b){
                     return parseInt(a.option_number) - parseInt(b.option_number);
@@ -236,7 +238,7 @@ const TEST_UI_TopicsData = ({itemId, updateTopicsList}) => {
     async function fetchTopics() {
         let ret = null;
         try {
-            const topicData = await API.graphql(graphqlOperation(listTopics))
+            const topicData = await API.graphql(graphqlOperation(listTopics, {limit: DYNAMO_QUERY_MAX}))
             const topics = topicData.data.listTopics.items
             setTopics(topics)
             ret = topics

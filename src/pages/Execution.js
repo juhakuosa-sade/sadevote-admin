@@ -11,6 +11,8 @@ import { getSelectedMeeting } from '../App';
 import { meetingInitialState } from'./MeetingsData';
 import { topicInitialState } from'./TopicsData';
 
+const DYNAMO_QUERY_MAX = 1000;
+
 
 const initState = {
     renderSelect : "SHOWTOPIC",
@@ -54,7 +56,7 @@ const RunMeeting = () => {
                     const query = {id: criteria};
                     filter.or = [...filter.or, query];
                 });              
-                const tpcs = await API.graphql(graphqlOperation(listTopics, {filter: filter}));
+                const tpcs = await API.graphql(graphqlOperation(listTopics, {filter: filter, limit: DYNAMO_QUERY_MAX}));
                 const topics = tpcs.data.listTopics.items;
                 topics.sort(function(a,b){
                     return parseInt(a.topic_number) - parseInt(b.topic_number);
@@ -103,7 +105,7 @@ const RunMeeting = () => {
 
             //fetch the needed voting options
             try {
-                const optionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter}));
+                const optionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter, limit: DYNAMO_QUERY_MAX}));
                 var optionsList = optionData.data.listVotingOptions.items; 
                 optionsList.sort(function(a,b){
                     return parseInt(a.option_number) - parseInt(b.option_number);
