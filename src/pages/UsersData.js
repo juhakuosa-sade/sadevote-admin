@@ -4,13 +4,13 @@ import PropTypes from 'prop-types';
 import { API, graphqlOperation } from 'aws-amplify'
 
 import { generateId, getSelectedMeeting } from '../App'
-//import { getListedUsers } from './AllUsersList'
-
 
 import { createUser, updateUser, updateMeeting } from '../graphql/mutations'
 import { listUsers, getMeeting } from '../graphql/queries'
 
 import '../App.css';
+
+const DYNAMO_QUERY_MAX = 1000;
 
 const userInitialState = {
     id: generateId(),
@@ -90,7 +90,7 @@ const UsersData = ({itemId, updateUsersList}) => {
 
     async function fetchUsers() {
         try {
-            const userData = await API.graphql(graphqlOperation(listUsers))
+            const userData = await API.graphql(graphqlOperation(listUsers, {limit: DYNAMO_QUERY_MAX}))
             const users = userData.data.listUsers.items
             setUsers(users)
         } catch (err) { console.log('error fetching users') }

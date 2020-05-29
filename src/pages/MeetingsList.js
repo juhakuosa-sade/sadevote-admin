@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+
 import PropTypes from 'prop-types';
 
 import '../App.css';
@@ -7,22 +8,24 @@ import { API, graphqlOperation } from 'aws-amplify'
 
 import { listMeetings } from '../graphql/queries'
 import MeetingData from './MeetingsData';
-import { setSelectedMeeting } from '../App';
+import { confirmAction, setSelectedMeeting } from '../App';
 import { deleteMeeting } from '../graphql/mutations'
+
+const DYNAMO_QUERY_MAX = 1000;
 
 
 const initState = {
     renderSelect : "LIST",
     editParam : "",
+    name : "",
 };
 
 const MeetingsList = ({cbfn}) => {
 
     const [meetings, setMeetings] = useState([]);
-    const fState = initState ;
+    const fState = initState;
     const [uiState, setState] = useState(initState);
-    const [isLoading, setIsLoading] = useState(false);
-
+    const [isLoading, setIsLoading] = useState(false);    
 
     useEffect(() => {
         fetchMeetings();
@@ -31,11 +34,11 @@ const MeetingsList = ({cbfn}) => {
     function updateFetch() {
         fetchMeetings();
     }
-        
+
     async function fetchMeetings() {
         setIsLoading(true)
         try {
-            const meetingData = await API.graphql(graphqlOperation(listMeetings))
+            const meetingData = await API.graphql(graphqlOperation(listMeetings, {limit: DYNAMO_QUERY_MAX}))
             const meetings = meetingData.data.listMeetings.items
             setMeetings(meetings)
         } catch (err) { console.log('error fetching meetings') }
@@ -45,10 +48,11 @@ const MeetingsList = ({cbfn}) => {
     async function delMeeting(id)  {
         const mtg = {
             id: id,
-          };
+            };
         try {
             await API.graphql(graphqlOperation(deleteMeeting, {input: mtg}));
             updateFetch();
+            return true;
         } catch (err) {
             console.log('error deleting meeting:', err)
         }
@@ -88,13 +92,21 @@ const MeetingsList = ({cbfn}) => {
         driveRendering("SELECT", id, true);
     }
 
-    const handleDelete = (event) => {
-        let id = event.target.getAttribute('id');
+    const handleDelete = async (event) => {
+        const id = event.target.getAttribute('id');
+        const name = event.target.getAttribute('name');
 
-        fState.renderSelect="DELETE";
-        fState.editParam=id;
-
-        driveRendering("DELETE", id, true);
+        if (await confirmAction(name)) {
+            if (await delMeeting(id)) {
+                fState.renderSelect="DELETE";
+                fState.editParam=id;
+                fState.name=name;
+                driveRendering("DELETE", id, true);
+            }
+            
+        }
+        else resetRenderSelection();
+            
     }
 
     const handleCreate = (event) => {
@@ -104,15 +116,16 @@ const MeetingsList = ({cbfn}) => {
 
         driveRendering("CREATE", '', true);
     }
-    
+
     function resetRenderSelection() {
         const param = fState.editParam;
-        fState.renderSelect="LIST";
-        fState.editParam='';
+        fState.renderSelect = "LIST";
+        fState.editParam = "";
+        fState.name = "";
         return (param);
     }
     
-//console.log("Rendering", fState.renderSelect);
+console.log("Rendering", fState.renderSelect);
 
 if (fState.renderSelect === "LIST") {
     return (
@@ -135,7 +148,7 @@ if (fState.renderSelect === "LIST") {
                                 </div>
                             </div>
                             <button style={styles.button} id={meeting.id} name={meeting.name} desc={meeting.description} onClick={handleEdit}>Edit</button>
-                            <button style={styles.button} id={meeting.id} onClick={handleDelete}>Delete</button>
+                            <button style={styles.button} id={meeting.id} name={meeting.name} onClick={handleDelete}>Delete</button>
                             <button style={styles.button} id={meeting.id} name={meeting.name} desc={meeting.description} onClick={handleSelect}>Select</button>
                         </div>    
                             <hr className="App-horizontal-divider" />
@@ -187,13 +200,9 @@ else if (fState.renderSelect === "EDIT") {
 }
 
 else if (fState.renderSelect === "DELETE") {
-    const selected = resetRenderSelection(); 
-    const mtg = delMeeting(selected);
+    const selected = resetRenderSelection();
 
-    var res = "";
-
-    if (!mtg) res= "Deleting meeting " + selected + " failed.";
-    else res = "Meeting " + selected + " deleted.";    
+    const res = "Meeting " + selected + " deleted.";    
     
     return (
         <h4>{res}</h4>        

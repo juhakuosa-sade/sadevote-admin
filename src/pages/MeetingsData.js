@@ -7,6 +7,8 @@ import { generateId } from '../App'
 import { createMeeting, updateMeeting } from '../graphql/mutations'
 import { listMeetings } from '../graphql/queries'
 
+const DYNAMO_QUERY_MAX = 1000;
+
 export const meetingInitialState = { 
     id: generateId(),
     name: '', 
@@ -67,7 +69,7 @@ const MeetingData = ({itemId, updateMeetingsList}) => {
 
     async function fetchMeetings() {
         try {
-            const meetingData = await API.graphql(graphqlOperation(listMeetings))
+            const meetingData = await API.graphql(graphqlOperation(listMeetings, {limit: DYNAMO_QUERY_MAX}))
             const meetings = meetingData.data.listMeetings.items
             setMeetings(meetings)
         } catch (err) { console.log('error fetching meetings') }

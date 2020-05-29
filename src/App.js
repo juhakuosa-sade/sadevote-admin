@@ -2,13 +2,13 @@ import React, { Component } from 'react';
 import { BrowserRouter, Switch, Route, Redirect } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 
-
 import logo from './svg/sade_innovations_on_black_background.svg';
 import './App.css';
 import { withAuthenticator } from 'aws-amplify-react'; // or 'aws-amplify-react-native';
 import {Auth} from 'aws-amplify';
 import '@aws-amplify/ui/dist/style.css';
-
+import { confirmAlert } from 'react-confirm-alert';
+import './pages/Alert.css';
 
 import Home from "./pages/Home";
 import MeetingsList from "./pages/MeetingsList";
@@ -16,14 +16,6 @@ import UsersList from "./pages/UsersList";
 import TopicsList from "./pages/TopicsList";
 import RunMeeting from "./pages/Execution";
 import TodoData from "./pages/TodoData";
-
-const pageHome='/';
-const pageMeetings='/meetings';
-const pageTopics='/topics'
-const pageUsers='/users'
-const pageRun='/run'
-const pageTodos='/todos';
-
 
 export function signOut() {
     console.log("Signing out");
@@ -34,6 +26,31 @@ export function generateId() {
     return uuidv4();
 }
 
+export function confirmAction(row1) {
+    return new Promise(function (resolve) {
+        confirmAlert({
+            title: "You are about to delete " + row1,
+            message: "Are you sure?",
+            buttons: [
+            {
+                label: 'Yes',
+                onClick: () => { resolve(true) }
+            },
+            {
+                label: 'No',
+                onClick: () => { resolve(false) }
+            }
+            ]
+        });
+    });
+}
+
+const pageHome='/';
+const pageMeetings='/meetings';
+const pageTopics='/topics'
+const pageUsers='/users'
+const pageRun='/run'
+const pageTodos='/todos';
 
 const selectedMeeting = {
     id : "",

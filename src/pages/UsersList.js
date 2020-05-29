@@ -12,6 +12,8 @@ import { listUsers, getMeeting } from '../graphql/queries'
 import UserData from './UsersData';
 import { deleteUser, updateMeeting } from '../graphql/mutations'
 
+const DYNAMO_QUERY_MAX = 1000;
+
 
 const initState = {
     renderSelect : "LIST",
@@ -64,7 +66,7 @@ const UsersList = () => {
 
         setIsLoading(true)
         try {
-            const userData = await API.graphql(graphqlOperation(listUsers))
+            const userData = await API.graphql(graphqlOperation(listUsers, {limit: DYNAMO_QUERY_MAX}))
             const userIdList = userData.data.listUsers.items
             // TODO: Add filtering to allow seeing only those items which the admin user has created himself
 

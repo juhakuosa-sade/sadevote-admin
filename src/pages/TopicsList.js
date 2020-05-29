@@ -10,6 +10,8 @@ import TopicData from './TopicsData';
 import { getSelectedMeeting } from '../App';
 import { deleteTopic } from '../graphql/mutations'
 
+const DYNAMO_QUERY_MAX = 1000;
+
 
 const initState = {
     renderSelect : "LIST",
@@ -62,7 +64,7 @@ const TopicsList = () => {
             const meeting = await API.graphql(graphqlOperation(getMeeting, {id: selectedMeeting.id}));
             topicIdList = [...meeting.data.getMeeting.topics]
 
-            const topicData = await API.graphql(graphqlOperation(listTopics))
+            const topicData = await API.graphql(graphqlOperation(listTopics, {limit: DYNAMO_QUERY_MAX}))
             const topics = topicData.data.listTopics.items
 
             var filteredTopics = [...''];

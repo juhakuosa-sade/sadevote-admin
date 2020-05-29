@@ -11,6 +11,8 @@ import { getSelectedMeeting } from '../App';
 import { meetingInitialState } from'./MeetingsData';
 import { topicInitialState } from'./TopicsData';
 
+const DYNAMO_QUERY_MAX = 1000;
+
 
 const initState = {
     renderSelect : "SHOWTOPIC",
@@ -54,7 +56,7 @@ const RunMeeting = () => {
                     const query = {id: criteria};
                     filter.or = [...filter.or, query];
                 });              
-                const tpcs = await API.graphql(graphqlOperation(listTopics, {filter: filter}));
+                const tpcs = await API.graphql(graphqlOperation(listTopics, {filter: filter, limit: DYNAMO_QUERY_MAX}));
                 const topics = tpcs.data.listTopics.items;
                 topics.sort(function(a,b){
                     return parseInt(a.topic_number) - parseInt(b.topic_number);
@@ -103,7 +105,7 @@ const RunMeeting = () => {
 
             //fetch the needed voting options
             try {
-                const optionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter}));
+                const optionData = await API.graphql(graphqlOperation(listVotingOptions, {filter:filter, limit: DYNAMO_QUERY_MAX}));
                 var optionsList = optionData.data.listVotingOptions.items; 
                 optionsList.sort(function(a,b){
                     return parseInt(a.option_number) - parseInt(b.option_number);
@@ -117,7 +119,7 @@ const RunMeeting = () => {
             console.log("OPTIONS:", options)
         }
 
-        console.log("fetchOPTIONS:", optFetchAllowed, topicState.id)
+        console.log("fetchOPTIONS enabled?:", optFetchAllowed, topicState.id)
 
         if ((optFetchAllowed) && (topicState.id) && (topicState.id.length>0)) {
             setOptFetchAllowed(false);
@@ -214,19 +216,18 @@ const RunMeeting = () => {
 
     const handleNext = (event) => {
         //let id = event.target.getAttribute('id');
-        updateActivation(false);
-        unsubscribeVotingProgress();
-        setOptions([]);
-
+        
         const maxIndex = parseInt(meetingState.topics.length - 1); 
 
         let index = parseInt(topicIndex);
         if (index < maxIndex) {
+            updateActivation(false);
+            unsubscribeVotingProgress();
+
+            setOptions([]);
             index++;
             setTopicIndex(index);
         } 
-        console.log("topics.length", meetingState.topics.length);
-        console.log("Max index:", maxIndex);
         console.log("Topic index:", index);
 
         fState.renderSelect="SHOWTOPIC";
@@ -236,12 +237,13 @@ const RunMeeting = () => {
 
     const handlePrev = (event) => {
         //let id = event.target.getAttribute('id');
-        updateActivation(false);
-        unsubscribeVotingProgress();
-        setOptions([]);
-
+        
         let index = parseInt(topicIndex);
         if (index > 0) {
+            updateActivation(false);
+            unsubscribeVotingProgress();
+
+            setOptions([]);
             index--;
             setTopicIndex(index);
         } 
