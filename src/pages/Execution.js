@@ -119,7 +119,7 @@ const RunMeeting = () => {
             console.log("OPTIONS:", options)
         }
 
-        console.log("fetchOPTIONS:", optFetchAllowed, topicState.id)
+        console.log("fetchOPTIONS enabled?:", optFetchAllowed, topicState.id)
 
         if ((optFetchAllowed) && (topicState.id) && (topicState.id.length>0)) {
             setOptFetchAllowed(false);
@@ -216,19 +216,18 @@ const RunMeeting = () => {
 
     const handleNext = (event) => {
         //let id = event.target.getAttribute('id');
-        updateActivation(false);
-        unsubscribeVotingProgress();
-        setOptions([]);
-
+        
         const maxIndex = parseInt(meetingState.topics.length - 1); 
 
         let index = parseInt(topicIndex);
         if (index < maxIndex) {
+            updateActivation(false);
+            unsubscribeVotingProgress();
+
+            setOptions([]);
             index++;
             setTopicIndex(index);
         } 
-        console.log("topics.length", meetingState.topics.length);
-        console.log("Max index:", maxIndex);
         console.log("Topic index:", index);
 
         fState.renderSelect="SHOWTOPIC";
@@ -238,12 +237,13 @@ const RunMeeting = () => {
 
     const handlePrev = (event) => {
         //let id = event.target.getAttribute('id');
-        updateActivation(false);
-        unsubscribeVotingProgress();
-        setOptions([]);
-
+        
         let index = parseInt(topicIndex);
         if (index > 0) {
+            updateActivation(false);
+            unsubscribeVotingProgress();
+
+            setOptions([]);
             index--;
             setTopicIndex(index);
         } 
