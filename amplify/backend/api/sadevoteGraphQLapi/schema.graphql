@@ -10,7 +10,7 @@ type Meeting @model {
   admins:  [ID]
   users:  [ID]
   topics:  [ID]
-  active: Boolean
+  active: Boolean 
 }
 type User @model {
   id: ID!

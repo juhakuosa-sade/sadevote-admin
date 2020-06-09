@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useCallback, useState } from 'react'
 
 import PropTypes from 'prop-types';
 
@@ -20,29 +20,35 @@ const initState = {
     name : "",
 };
 
+var exiting = false;
+
 const MeetingsList = ({cbfn}) => {
 
     const [meetings, setMeetings] = useState([]);
     const fState = initState;
     const [uiState, setState] = useState(initState);
-    const [isLoading, setIsLoading] = useState(false);    
+    const [isLoading, setIsLoading] = useState(false);
+
+    const fetchMeetings = useCallback(async () => {
+             setIsLoading(true)
+             try {
+                 const meetingData = await API.graphql(graphqlOperation(listMeetings, {limit: DYNAMO_QUERY_MAX}))
+                 const meetings = meetingData.data.listMeetings.items
+                 setMeetings(meetings)
+             } catch (err) { setIsLoading(false); console.log('error fetching meetings'); }
+             setIsLoading(false)
+     }, []);
 
     useEffect(() => {
-        fetchMeetings();
-    }, [])
+        if (!exiting) {
+            fetchMeetings();
+            console.log("HÄR");
+        }
+
+    }, [fetchMeetings])
 
     function updateFetch() {
         fetchMeetings();
-    }
-
-    async function fetchMeetings() {
-        setIsLoading(true)
-        try {
-            const meetingData = await API.graphql(graphqlOperation(listMeetings, {limit: DYNAMO_QUERY_MAX}))
-            const meetings = meetingData.data.listMeetings.items
-            setMeetings(meetings)
-        } catch (err) { console.log('error fetching meetings') }
-        setIsLoading(false)
     }
 
     async function delMeeting(id)  {
@@ -81,6 +87,7 @@ const MeetingsList = ({cbfn}) => {
         const desc = event.target.getAttribute('desc');
 
         setSelectedMeeting(id, name, desc);
+        exiting = true;
 
         fState.renderSelect="SELECT";
         fState.editParam=id;
@@ -88,9 +95,11 @@ const MeetingsList = ({cbfn}) => {
         driveRendering("SELECT", id, true);
  
         const timer= setTimeout(() => { 
-                cbfn()
-                clearTimeout(timer)
-            } , 3000)
+            clearTimeout(timer)
+            cbfn()
+            exiting = false;
+            } , 2000)
+
     }
 
     const handleDelete = async (event) => {

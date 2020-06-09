@@ -11,6 +11,7 @@ import { API, graphqlOperation } from 'aws-amplify'
 import { listUsers, getMeeting } from '../graphql/queries'
 import UserData from './UsersData';
 import { deleteUser, updateMeeting } from '../graphql/mutations'
+import { makeMeetingInput } from '../gqlutil'
 
 const DYNAMO_QUERY_MAX = 1000;
 
@@ -95,7 +96,7 @@ const UsersList = () => {
         if (selectedMeeting.id === '') return ret;
 
         try {
-            const meeting = {...mtgState}
+            const meeting = makeMeetingInput({...mtgState})
             ret = await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
         } catch (err) { console.log('error updating meeting:', err) }
 

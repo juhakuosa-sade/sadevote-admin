@@ -7,6 +7,8 @@ import { generateId, getSelectedMeeting } from '../App'
 
 import { createUser, updateUser, updateMeeting } from '../graphql/mutations'
 import { listUsers, getMeeting } from '../graphql/queries'
+import { makeMeetingInput, makeUserInput } from '../gqlutil'
+
 
 import '../App.css';
 
@@ -80,7 +82,7 @@ const UsersData = ({itemId, updateUsersList}) => {
         let ret = null;
         try {
             const mtg = await API.graphql(graphqlOperation(getMeeting, {id: selectedMeeting.id}));
-            let meeting = {...mtg.data.getMeeting}
+            let meeting = makeMeetingInput({...mtg.data.getMeeting})
             const listedUsers = [...meeting.users, id];
             meeting.users = [...listedUsers];
             ret = await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
@@ -131,7 +133,7 @@ const UsersData = ({itemId, updateUsersList}) => {
                 console.log('error creating user:',formState);
                 return ret
             }
-            const user = { ...formState }
+            const user = makeUserInput({ ...formState })
             setUsers([...users, user]);
 
             // This will execute the callback and return to UsersList if db operation succeeded

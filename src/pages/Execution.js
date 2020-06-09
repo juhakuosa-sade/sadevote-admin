@@ -4,8 +4,9 @@ import '../App.css';
 import { API, graphqlOperation } from 'aws-amplify'
 
 import { listTopics, getMeeting, listVotingOptions } from '../graphql/queries'
-import { updateTopic } from '../graphql/mutations'
+import { updateTopic, updateMeeting } from '../graphql/mutations'
 import { onUpdateVotingOption  } from '../graphql/subscriptions'
+import { makeTopicInput, makeMeetingInput } from '../gqlutil'
 
 import { getSelectedMeeting } from '../App';
 import { meetingInitialState } from'./MeetingsData';
@@ -116,7 +117,6 @@ const RunMeeting = () => {
             } catch (error) {
             console.log("Error fetching voting options:", error);
             }
-            console.log("OPTIONS:", options)
         }
 
         console.log("fetchOPTIONS enabled?:", optFetchAllowed, topicState.id)
@@ -149,6 +149,31 @@ const RunMeeting = () => {
                 }
             }
     }, [subscribed, subscription]);
+
+    useEffect(() => { 
+
+         async function updateMeetingActivation(state) {
+            try {
+                if ((!meetingState)||(!meetingState.name || !meetingState.description)) return
+                
+                const meeting = makeMeetingInput({ ...meetingState });
+                meeting.active = state;
+                await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
+    
+            } catch (err) {
+                console.log('error updating meeting:', err)
+            }
+        }
+
+        console.log("in start: activating meeting")
+        updateMeetingActivation(true);
+
+        return async () => {  
+            console.log("in clean-up: deactivating meeting")
+            updateMeetingActivation(false)
+        }
+    }, [meetingState]);
+
 
     async function subscribeVotingProgress () {
         setSubscribed(true);
@@ -183,20 +208,20 @@ const RunMeeting = () => {
         return false;
     }
 
-    async function updateActivation(state) {
-        const topic = { ...topicState };
+    async function updateTopicActivation(state) {
+        const topic = makeTopicInput({ ...topicState });
         topic.active = state;
         try {
             await API.graphql(graphqlOperation(updateTopic, {input: topic}))
         } catch (error) {
-            console.log("error updating activation status", error);
+            console.log("error updating topic activation status", error);
         }
         setTopicActivated(state);
     }
 
     const handleCloseVoting = (event) => {
     //    let id = event.target.getAttribute('id');
-        updateActivation(false);
+        updateTopicActivation(false);
         unsubscribeVotingProgress();
 
         fState.renderSelect="SHOWTOPIC";
@@ -206,7 +231,7 @@ const RunMeeting = () => {
 
     const handleOpenVoting = (event) => {
     //    let id = event.target.getAttribute('id');
-        updateActivation(true);
+        updateTopicActivation(true);
         subscribeVotingProgress();
 
         fState.renderSelect="SHOWTOPIC";
@@ -221,7 +246,7 @@ const RunMeeting = () => {
 
         let index = parseInt(topicIndex);
         if (index < maxIndex) {
-            updateActivation(false);
+            updateTopicActivation(false);
             unsubscribeVotingProgress();
 
             setOptions([]);
@@ -240,7 +265,7 @@ const RunMeeting = () => {
         
         let index = parseInt(topicIndex);
         if (index > 0) {
-            updateActivation(false);
+            updateTopicActivation(false);
             unsubscribeVotingProgress();
 
             setOptions([]);
@@ -266,7 +291,7 @@ const RunMeeting = () => {
         fState.editParam='';
     }
 
-    // ********  UI ********
+    // ********  UI  ********
 
     if (fState.renderSelect === "SHOWTOPIC") {
         return (

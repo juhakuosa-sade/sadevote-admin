@@ -11,6 +11,7 @@ import {  getMeeting, listTopics, listVotingOptions } from '../graphql/queries'
 
 import { updateMeeting, createTopic, updateTopic  } from '../graphql/mutations'
 import { createVotingOption, updateVotingOption, deleteVotingOption} from '../graphql/mutations'
+import { makeVotingOptionInput, makeMeetingInput, makeTopicInput } from '../gqlutil'
 
 const DYNAMO_QUERY_MAX = 1000;
 
@@ -45,7 +46,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
         let ret = null;
         try {
             const mtg = await API.graphql(graphqlOperation(getMeeting, {id: selectedMeeting.id}));
-            let meeting = {...mtg.data.getMeeting}
+            let meeting = makeMeetingInput({...mtg.data.getMeeting})
             listedTopics = [...listedTopics, topicState.id];
             meeting.topics = [...listedTopics];
             ret = await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
@@ -104,7 +105,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
                 console.log('error creating votingOption:',votingOptionToAdd);
                 return
             }
-            const votingOption = { ...votingOptionToAdd }
+            const votingOption = makeVotingOptionInput({ ...votingOptionToAdd })
             ret = await API.graphql(graphqlOperation(updateVotingOption, {input: votingOption}))
         } catch (err) {
             console.log('error updating votingOption:', err)
@@ -300,7 +301,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             console.log('error creating topic:',topicState);
             return
         }
-        const topic = { ...topicState }
+        const topic = makeTopicInput({ ...topicState });
         
         let index = 0;
         topic.voting_options = [];
@@ -354,7 +355,7 @@ const TopicsData = ({itemId, updateTopicsList}) => {
             setCats(cats);
         }
 
-        var topic = { ...topicState }
+        var topic = makeTopicInput({ ...topicState })
         if (topic.voting_options_count === 1) {
             topic.voting_options = [];
             clearCatState();

@@ -6,6 +6,7 @@ import { generateId } from '../App'
 
 import { createMeeting, updateMeeting } from '../graphql/mutations'
 import { listMeetings } from '../graphql/queries'
+import { makeMeetingInput } from '../gqlutil'
 
 const DYNAMO_QUERY_MAX = 1000;
 
@@ -15,7 +16,8 @@ export const meetingInitialState = {
     description: '',
     admins:  [],
     users:  [],
-    topics:  []
+    topics:  [],
+    active: false
 }
 
 const MeetingData = ({itemId, updateMeetingsList}) => {
@@ -94,7 +96,7 @@ const MeetingData = ({itemId, updateMeetingsList}) => {
         try {
             if (!meetingState.name || !meetingState.description) return
             
-            const meeting = { ...meetingState };
+            const meeting = makeMeetingInput({ ...meetingState });
             setMeetings([...meetings, meeting]);
             clearState();
             await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));

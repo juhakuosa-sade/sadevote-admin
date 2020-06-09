@@ -95,10 +95,17 @@ class App extends Component {
         this.goTodos = this.goTodos.bind(this);
 
         this.enableContentButtons = this.enableContentButtons.bind(this);
+        this.meetingSelected = this.meetingSelected.bind(this);
+
     }
 
     enableContentButtons() {
         this.setState({ contentButtonsDisabled: false });
+    }
+
+    meetingSelected() {
+        this.enableContentButtons();
+        this.goTopics();
     }
 
     goPage(page) {
@@ -118,7 +125,6 @@ class App extends Component {
     }
 
     goTopics() {
-        this.enableContentButtons()
         this.goPage(pageTopics)
     }
 
@@ -192,7 +198,8 @@ class App extends Component {
                                 <Switch>
                                     <Route exact path={pageHome} component={Home} />
                                     <Route path={pageMeetings} 
-                                           component={props => <MeetingsList cbfn={this.goTopics}/>}/>
+                                           component={props => <MeetingsList 
+                                           cbfn={this.meetingSelected}/>}/>
                                     <Route path={pageTopics} component={TopicsList} />
                                     <Route path={pageUsers} component={UsersList} />
                                     <Route path={pageRun} component={RunMeeting} />
