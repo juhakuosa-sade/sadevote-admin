@@ -7,6 +7,8 @@ export const onCreateTodo = /* GraphQL */ `
       id
       name
       description
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -16,6 +18,8 @@ export const onUpdateTodo = /* GraphQL */ `
       id
       name
       description
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -25,6 +29,8 @@ export const onDeleteTodo = /* GraphQL */ `
       id
       name
       description
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -37,6 +43,9 @@ export const onCreateMeeting = /* GraphQL */ `
       admins
       users
       topics
+      active
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -49,6 +58,9 @@ export const onUpdateMeeting = /* GraphQL */ `
       admins
       users
       topics
+      active
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -61,6 +73,9 @@ export const onDeleteMeeting = /* GraphQL */ `
       admins
       users
       topics
+      active
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -73,6 +88,8 @@ export const onCreateUser = /* GraphQL */ `
       lastname
       shares
       present
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -85,6 +102,8 @@ export const onUpdateUser = /* GraphQL */ `
       lastname
       shares
       present
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -97,6 +116,8 @@ export const onDeleteUser = /* GraphQL */ `
       lastname
       shares
       present
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -111,6 +132,8 @@ export const onCreateTopic = /* GraphQL */ `
       voting_options_count
       active
       voting_percentage
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -125,6 +148,8 @@ export const onUpdateTopic = /* GraphQL */ `
       voting_options_count
       active
       voting_percentage
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -139,6 +164,8 @@ export const onDeleteTopic = /* GraphQL */ `
       voting_options_count
       active
       voting_percentage
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -152,6 +179,8 @@ export const onCreateVotingOption = /* GraphQL */ `
       option_text
       votes
       changed
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -165,6 +194,8 @@ export const onUpdateVotingOption = /* GraphQL */ `
       option_text
       votes
       changed
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -178,6 +209,8 @@ export const onDeleteVotingOption = /* GraphQL */ `
       option_text
       votes
       changed
+      createdAt
+      updatedAt
     }
   }
 `;

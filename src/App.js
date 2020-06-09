@@ -83,7 +83,7 @@ class App extends Component {
         this.state = {
             toPage: pageHome,
             showWait: false,
-            contentButtonsDisabled: false 
+            contentButtonsDisabled: true 
         }
 
         this.goPage = this.goPage.bind(this);
@@ -97,7 +97,7 @@ class App extends Component {
         this.enableContentButtons = this.enableContentButtons.bind(this);
     }
 
-    enableContentButtons = () => {
+    enableContentButtons() {
         this.setState({ contentButtonsDisabled: false });
     }
 
@@ -118,6 +118,7 @@ class App extends Component {
     }
 
     goTopics() {
+        this.enableContentButtons()
         this.goPage(pageTopics)
     }
 
@@ -132,6 +133,7 @@ class App extends Component {
     goTodos() {
         this.goPage(pageTodos)
     }
+
     
     render () {
 
@@ -155,9 +157,13 @@ class App extends Component {
                         <button style={styles.button} 
                                 hidden = {this.state.contentButtonsDisabled} 
                                 onClick={this.goUsers}>Users</button>
-                        <button hidden={true} style={styles.button} onClick={this.goTodos}>Todos</button>
+                        <button style={styles.button} 
+                                hidden={true} 
+                                onClick={this.goTodos}>Todos</button>
                         <hr/>
-                        <button style={styles.button} onClick={this.goRun}>Run</button>  
+                        <button style={styles.button} 
+                                hidden = {this.state.contentButtonsDisabled} 
+                                onClick={this.goRun}>Run</button>  
                         <hr/>
                         <button style={styles.button} onClick={() => signOut()}>Sign out</button>  
                         <p/>
@@ -166,7 +172,11 @@ class App extends Component {
                         <div style={styles.status}>
                             { 
                             selectedMeeting.id 
-                                ? <div> Selected meeting: { selectedMeeting.name } ({ selectedMeeting.id }) </div>
+                                ? 
+                                <div> Selected meeting: { selectedMeeting.id } 
+                                    <div style={styles.title}>{ selectedMeeting.name }</div>
+                                </div>
+
                                 : <div></div>
                             }
                            
@@ -181,7 +191,8 @@ class App extends Component {
                                 <Redirect to= {this.state.toPage} />
                                 <Switch>
                                     <Route exact path={pageHome} component={Home} />
-                                    <Route path={pageMeetings} component={MeetingsList} cbfn={()=>{this.enableContentButtons()}} />
+                                    <Route path={pageMeetings} 
+                                           component={props => <MeetingsList cbfn={this.goTopics}/>}/>
                                     <Route path={pageTopics} component={TopicsList} />
                                     <Route path={pageUsers} component={UsersList} />
                                     <Route path={pageRun} component={RunMeeting} />
@@ -204,20 +215,11 @@ const styles = {
     container: { width: 500, margin: '0 auto', justifyContent: 'center', padding: 10 },
     button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, padding: '8px 0px' },
     status: { color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' },
-    info: { justifyContent: 'center', color: 'white', outline: 'none', fontSize: 10, padding: '4px 4px' }
+    info: { color: 'white', outline: 'none', fontSize: 10, padding: '0px 0px' },
+    title: { color: 'white', outline: 'none', fontSize: 18, fontWeight: 'bold' }
 }
 
 export default withAuthenticator(App);
-
-/*
-{ 
-(selectedMeeting.selected && this.state.contentButtonsDisabled)
-    ? 
-    this.enableContentButtons()
-    :
-    <div></div>
-}
-*/
 
 // Get the aws resources configuration parameters
 //import awsconfig from './aws-exports'; // if you are using Amplify CLI

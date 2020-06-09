@@ -7,6 +7,8 @@ export const getTodo = /* GraphQL */ `
       id
       name
       description
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -21,6 +23,8 @@ export const listTodos = /* GraphQL */ `
         id
         name
         description
+        createdAt
+        updatedAt
       }
       nextToken
     }
@@ -35,6 +39,9 @@ export const getMeeting = /* GraphQL */ `
       admins
       users
       topics
+      active
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -52,6 +59,9 @@ export const listMeetings = /* GraphQL */ `
         admins
         users
         topics
+        active
+        createdAt
+        updatedAt
       }
       nextToken
     }
@@ -66,6 +76,8 @@ export const getUser = /* GraphQL */ `
       lastname
       shares
       present
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -83,6 +95,8 @@ export const listUsers = /* GraphQL */ `
         lastname
         shares
         present
+        createdAt
+        updatedAt
       }
       nextToken
     }
@@ -99,6 +113,8 @@ export const getTopic = /* GraphQL */ `
       voting_options_count
       active
       voting_percentage
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -118,6 +134,8 @@ export const listTopics = /* GraphQL */ `
         voting_options_count
         active
         voting_percentage
+        createdAt
+        updatedAt
       }
       nextToken
     }
@@ -133,6 +151,8 @@ export const getVotingOption = /* GraphQL */ `
       option_text
       votes
       changed
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -151,6 +171,8 @@ export const listVotingOptions = /* GraphQL */ `
         option_text
         votes
         changed
+        createdAt
+        updatedAt
       }
       nextToken
     }

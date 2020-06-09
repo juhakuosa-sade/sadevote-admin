@@ -68,10 +68,6 @@ const MeetingsList = ({cbfn}) => {
 
     const handleEdit = (event) => {
         const id = event.target.getAttribute('id');
-        const name = event.target.getAttribute('name');
-        const desc = event.target.getAttribute('desc');
-
-        setSelectedMeeting(id, name, desc);
 
         fState.renderSelect="EDIT";
         fState.editParam=id;
@@ -90,6 +86,11 @@ const MeetingsList = ({cbfn}) => {
         fState.editParam=id;
 
         driveRendering("SELECT", id, true);
+ 
+        const timer= setTimeout(() => { 
+                cbfn()
+                clearTimeout(timer)
+            } , 3000)
     }
 
     const handleDelete = async (event) => {
@@ -184,7 +185,7 @@ else if (fState.renderSelect === "SELECT") {
                 </div>
             ))
         }
-                
+                        
     </div>
     )
 }

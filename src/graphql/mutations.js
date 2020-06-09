@@ -10,6 +10,8 @@ export const createTodo = /* GraphQL */ `
       id
       name
       description
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -22,6 +24,8 @@ export const updateTodo = /* GraphQL */ `
       id
       name
       description
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -34,6 +38,8 @@ export const deleteTodo = /* GraphQL */ `
       id
       name
       description
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -49,6 +55,9 @@ export const createMeeting = /* GraphQL */ `
       admins
       users
       topics
+      active
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -64,6 +73,9 @@ export const updateMeeting = /* GraphQL */ `
       admins
       users
       topics
+      active
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -79,6 +91,9 @@ export const deleteMeeting = /* GraphQL */ `
       admins
       users
       topics
+      active
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -94,6 +109,8 @@ export const createUser = /* GraphQL */ `
       lastname
       shares
       present
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -109,6 +126,8 @@ export const updateUser = /* GraphQL */ `
       lastname
       shares
       present
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -124,6 +143,8 @@ export const deleteUser = /* GraphQL */ `
       lastname
       shares
       present
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -141,6 +162,8 @@ export const createTopic = /* GraphQL */ `
       voting_options_count
       active
       voting_percentage
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -158,6 +181,8 @@ export const updateTopic = /* GraphQL */ `
       voting_options_count
       active
       voting_percentage
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -175,6 +200,8 @@ export const deleteTopic = /* GraphQL */ `
       voting_options_count
       active
       voting_percentage
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -191,6 +218,8 @@ export const createVotingOption = /* GraphQL */ `
       option_text
       votes
       changed
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -207,6 +236,8 @@ export const updateVotingOption = /* GraphQL */ `
       option_text
       votes
       changed
+      createdAt
+      updatedAt
     }
   }
 `;
@@ -223,6 +254,8 @@ export const deleteVotingOption = /* GraphQL */ `
       option_text
       votes
       changed
+      createdAt
+      updatedAt
     }
   }
 `;
