@@ -176,16 +176,22 @@ const RunMeeting = () => {
 
 
     async function subscribeVotingProgress () {
-        setSubscribed(true);
-        const subscription = await API.graphql(graphqlOperation(onUpdateVotingOption)).subscribe({
-            next: resp => {
-                const votingOption = resp.value.data.onUpdateVotingOption;
-                console.log("update !!!", votingOption);
-                updateVoting(votingOption, options);
-                }
-        });
-        console.log("SUBSCRIBED:", subscription);
-        setSubscription(subscription);
+        console.log("subscribing voting progress");
+        try {
+            const subscription = await API.graphql(graphqlOperation(onUpdateVotingOption)).subscribe({
+                next: resp => {
+                    const votingOption = resp.value.data.onUpdateVotingOption;
+                    console.log("update !!!", votingOption);
+                    updateVoting(votingOption, options);
+                    }
+            });
+            console.log("SUBSCRIBED:", subscription);
+            setSubscribed(true);
+            setSubscription(subscription);
+        } catch (error) {
+            console.log("Subscribing failed:", subscription);
+        }
+    
         return subscription;
     };
 
