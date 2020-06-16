@@ -42,7 +42,6 @@ const MeetingsList = ({cbfn}) => {
     useEffect(() => {
         if (!exiting) {
             fetchMeetings();
-            console.log("HÄR");
         }
 
     }, [fetchMeetings])

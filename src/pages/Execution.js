@@ -43,7 +43,7 @@ const RunMeeting = () => {
     const selectedMeeting = getSelectedMeeting();
 
     useEffect(() => 
-    { 
+    { //Fetch meeting data
         async function fetchMeetingAndTopics(id) {
             setIsLoading(true);
             try {
@@ -83,7 +83,7 @@ const RunMeeting = () => {
     }, [selectedMeeting.id, topicIndex, mtgFetchAllowed])
 
     useEffect(() => 
-    { 
+    { // Go to next topic
         const switchTopic = (index) => {
             setTopicState({...topics[index]});
             setOptFetchAllowed(true);
@@ -92,9 +92,8 @@ const RunMeeting = () => {
     }, [topicIndex, topics])
     
     useEffect(() => 
-    { 
+    { // Fetch voting options
         const fetchOptions = async () => {
-        //async function fetchOptions() {
 
             //create filter for fetching the needed voting options
             const filter = {or: []}
@@ -137,7 +136,7 @@ const RunMeeting = () => {
         setOptions([...newOptions]);  
       }, [])
           
-    useEffect(() => { 
+    useEffect(() => { // remove subscriptions when leaving 
         return async () => {  
             console.log("in clean-up", subscription, subscribed)
           
@@ -150,7 +149,7 @@ const RunMeeting = () => {
             }
     }, [subscribed, subscription]);
 
-    useEffect(() => { 
+    useEffect(() => { // Update meeting data
 
          async function updateMeetingActivation(state) {
             try {
@@ -174,22 +173,50 @@ const RunMeeting = () => {
         }
     }, [meetingState]);
 
-
+/*
+onUpdateVotingOption {
+                topic_id
+                topic_number
+                id
+                option_number
+                option_text
+                votes
+                changed
+                createdAt
+                updatedAt
+                }
+*/
     async function subscribeVotingProgress () {
         console.log("subscribing voting progress");
+        
+        /*
+        var voti = `subscription OnUpdateVotingOption {
+            onUpdateVotingOption {
+                topic_id
+                topic_number
+                id
+                option_number
+                option_text
+                votes
+                changed
+                createdAt
+                updatedAt
+                }
+            }`;*/
         try {
+ //           const subscription = await API.graphql(graphqlOperation(voti)).subscribe({
             const subscription = await API.graphql(graphqlOperation(onUpdateVotingOption)).subscribe({
-                next: resp => {
+            next: resp => {
                     const votingOption = resp.value.data.onUpdateVotingOption;
                     console.log("update !!!", votingOption);
                     updateVoting(votingOption, options);
                     }
             });
-            console.log("SUBSCRIBED:", subscription);
+            console.log("subscribed:", subscription);
             setSubscribed(true);
             setSubscription(subscription);
         } catch (error) {
-            console.log("Subscribing failed:", subscription);
+            console.log("subscribing failed:", subscription);
         }
     
         return subscription;
