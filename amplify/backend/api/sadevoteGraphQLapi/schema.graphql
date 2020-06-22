@@ -27,15 +27,22 @@ type Topic @model {
   topic_text: String
   voting_options: [ID]
   voting_options_count: Int!
+  voting_open: Boolean
   active: Boolean
   voting_percentage: Float
 }
 type VotingOption @model {
-  topic_id: ID!
-  topic_number: Int!
+  topic_id: ID
+  topic_number: Int
   id: ID!
-  option_number: Int!
+  option_number: Int
   option_text: String
   votes: Int
   changed: Boolean
+}
+type Voting @model {
+  id: ID!
+  votingOptionId: ID!
+  votes: Int
+  voter: String
 }

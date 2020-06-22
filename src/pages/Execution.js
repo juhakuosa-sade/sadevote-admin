@@ -31,7 +31,7 @@ const RunMeeting = () => {
     const [topicState, setTopicState] = useState(topicInitialState)
     const [topicIndex, setTopicIndex] = useState(0);
 
-    const [topicActivated, setTopicActivated] = useState(false);
+    const [votingOpen, setVotingOpen] = useState(false);
     const [mtgFetchAllowed, setMtgFetchAllowed] = useState(true);
     const [optFetchAllowed, setOptFetchAllowed] = useState(false);
 
@@ -62,10 +62,9 @@ const RunMeeting = () => {
                 topics.sort(function(a,b){
                     return parseInt(a.topic_number) - parseInt(b.topic_number);
                     })
-                setTopics([...topics]);
-    
+                setTopics([...topics]); 
                 setTopicState({...topics[topicIndex]});
-    
+
             } catch (error) {
                 console.log("Error in getting meeting topics ( getMeetingTopics(id) )", error)
                 setMeetingState({...meetingInitialState});
@@ -85,8 +84,10 @@ const RunMeeting = () => {
     useEffect(() => 
     { // Go to next topic
         const switchTopic = (index) => {
-            setTopicState({...topics[index]});
-            setOptFetchAllowed(true);
+            if (topics[index]) {
+                setTopicState({...topics[index]});
+                setOptFetchAllowed(true);
+            }
         };        
         switchTopic(topicIndex); 
     }, [topicIndex, topics])
@@ -94,6 +95,8 @@ const RunMeeting = () => {
     useEffect(() => 
     { // Fetch voting options
         const fetchOptions = async () => {
+
+            console.log("Fetching voting options...")
 
             //create filter for fetching the needed voting options
             const filter = {or: []}
@@ -118,8 +121,6 @@ const RunMeeting = () => {
             }
         }
 
-        console.log("fetchOPTIONS enabled?:", optFetchAllowed, topicState.id)
-
         if ((optFetchAllowed) && (topicState.id) && (topicState.id.length>0)) {
             setOptFetchAllowed(false);
             fetchOptions(); //fetch voting options 
@@ -137,11 +138,9 @@ const RunMeeting = () => {
       }, [])
           
     useEffect(() => { // remove subscriptions when leaving 
-        return async () => {  
-            console.log("in clean-up", subscription, subscribed)
-          
+        return async () => {            
             if ((subscription) && (subscribed)) {
-                    console.log("unsubscribing subscription...", subscription)
+                    console.log("in clean-up: unsubscribing subscription...", subscription)
                     await subscription.unsubscribe();
                     setSubscribed(false);
                     setSubscription(undefined);
@@ -152,63 +151,36 @@ const RunMeeting = () => {
     useEffect(() => { // Update meeting data
 
          async function updateMeetingActivation(state) {
-            try {
-                if ((!meetingState)||(!meetingState.name || !meetingState.description)) return
-                
+            try {                
                 const meeting = makeMeetingInput({ ...meetingState });
                 meeting.active = state;
                 await API.graphql(graphqlOperation(updateMeeting, {input: meeting}));
-    
             } catch (err) {
                 console.log('error updating meeting:', err)
             }
         }
 
-        console.log("in start: activating meeting")
-        updateMeetingActivation(true);
+        if (meetingState) {
+            console.log("in start: activating meeting")
+            updateMeetingActivation(true);
+        }
 
-        return async () => {  
-            console.log("in clean-up: deactivating meeting")
-            updateMeetingActivation(false)
+        return async () => { 
+            if (meetingState) {
+                console.log("in clean-up: deactivating meeting")
+                updateMeetingActivation(false)
+            }
         }
     }, [meetingState]);
 
-/*
-onUpdateVotingOption {
-                topic_id
-                topic_number
-                id
-                option_number
-                option_text
-                votes
-                changed
-                createdAt
-                updatedAt
-                }
-*/
     async function subscribeVotingProgress () {
         console.log("subscribing voting progress");
         
-        /*
-        var voti = `subscription OnUpdateVotingOption {
-            onUpdateVotingOption {
-                topic_id
-                topic_number
-                id
-                option_number
-                option_text
-                votes
-                changed
-                createdAt
-                updatedAt
-                }
-            }`;*/
         try {
- //           const subscription = await API.graphql(graphqlOperation(voti)).subscribe({
             const subscription = await API.graphql(graphqlOperation(onUpdateVotingOption)).subscribe({
             next: resp => {
                     const votingOption = resp.value.data.onUpdateVotingOption;
-                    console.log("update !!!", votingOption);
+                    console.log("Voting update !!!", votingOption);
                     updateVoting(votingOption, options);
                     }
             });
@@ -231,7 +203,6 @@ onUpdateVotingOption {
         }
     }
 
-
     function saveResults() {
         //TODO: Save results DB or local file 
     }
@@ -241,20 +212,50 @@ onUpdateVotingOption {
         return false;
     }
 
-    async function updateTopicActivation(state) {
+    async function updateVotingOpenStatus(state) {
         const topic = makeTopicInput({ ...topicState });
-        topic.active = state;
+        topic.voting_open = state;
         try {
             await API.graphql(graphqlOperation(updateTopic, {input: topic}))
         } catch (error) {
-            console.log("error updating topic activation status", error);
+            console.log("error updating voting open status", error);
         }
-        setTopicActivated(state);
+        setVotingOpen(state);
     }
+
+    useEffect(() => 
+    { // activate topic
+        
+        const updateTopicActivation = async (state) => {
+            
+            const topic = makeTopicInput({ ...topicState });
+
+            topic.active = state;
+            try {
+                console.log("Updating topic", topic)
+                await API.graphql(graphqlOperation(updateTopic, {input: topic}))
+            } catch (error) {
+                console.log("error updating topic activation status", error);
+            }
+   //         setOptFetchAllowed(true);
+        };        
+        if (topicState.id.length>0) {
+            console.log("Activating topic", topicState.id)
+            updateTopicActivation(true);
+        }
+
+        return async () => {  
+            if (topicState.id.length>0) {
+                console.log("in clean-up: deactivating topic")
+                updateTopicActivation(false)
+            }
+        }
+    }, [topicState])
+    
 
     const handleCloseVoting = (event) => {
     //    let id = event.target.getAttribute('id');
-        updateTopicActivation(false);
+        updateVotingOpenStatus(false);
         unsubscribeVotingProgress();
 
         fState.renderSelect="SHOWTOPIC";
@@ -264,8 +265,8 @@ onUpdateVotingOption {
 
     const handleOpenVoting = (event) => {
     //    let id = event.target.getAttribute('id');
-        updateTopicActivation(true);
         subscribeVotingProgress();
+        updateVotingOpenStatus(true);
 
         fState.renderSelect="SHOWTOPIC";
         fState.editParam='id';
@@ -279,7 +280,7 @@ onUpdateVotingOption {
 
         let index = parseInt(topicIndex);
         if (index < maxIndex) {
-            updateTopicActivation(false);
+            updateVotingOpenStatus(false);
             unsubscribeVotingProgress();
 
             setOptions([]);
@@ -298,7 +299,7 @@ onUpdateVotingOption {
         
         let index = parseInt(topicIndex);
         if (index > 0) {
-            updateTopicActivation(false);
+            updateVotingOpenStatus(false);
             unsubscribeVotingProgress();
 
             setOptions([]);
@@ -363,7 +364,7 @@ onUpdateVotingOption {
                             />
                         <div style={styles.rowcontainerClear}>
                             <div style={styles.title}>VOTING </div>
-                            <div style={styles.indicator} hidden={!topicActivated}>ACTIVE</div>
+                            <div style={styles.indicator} hidden={!votingOpen}>ACTIVE</div>
                         </div>
                        {
                             options.map((option, index) => (
@@ -385,7 +386,7 @@ onUpdateVotingOption {
                         }
                          
                         {
-                        topicActivated
+                        votingOpen
                         ?
                         <button style={styles.button} onClick={handleCloseVoting}>Close voting</button>
                         :
