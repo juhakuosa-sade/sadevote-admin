@@ -213,10 +213,14 @@ const RunMeeting = () => {
     }
 
     async function updateVotingOpenStatus(state) {
+        //if (topicState.voting_open === state) return;
+
         const topic = makeTopicInput({ ...topicState });
         topic.voting_open = state;
+        topic.active = true;
         try {
             await API.graphql(graphqlOperation(updateTopic, {input: topic}))
+       //     setTopicState({...topic})
         } catch (error) {
             console.log("error updating voting open status", error);
         }
@@ -234,14 +238,17 @@ const RunMeeting = () => {
             try {
                 console.log("Updating topic", topic)
                 await API.graphql(graphqlOperation(updateTopic, {input: topic}))
+           //     setTopicState({...topic})
             } catch (error) {
                 console.log("error updating topic activation status", error);
             }
-   //         setOptFetchAllowed(true);
         };        
-        if (topicState.id.length>0) {
-            console.log("Activating topic", topicState.id)
-            updateTopicActivation(true);
+        if ((topicState.active === false) && (topicState.id.length>0)) {
+            console.log("Activating topic...", topicState.id)
+            setTimeout(() => {
+                console.log("NOW!")
+                updateTopicActivation(true);
+            }, 500);
         }
 
         return async () => {  
@@ -266,7 +273,9 @@ const RunMeeting = () => {
     const handleOpenVoting = (event) => {
     //    let id = event.target.getAttribute('id');
         subscribeVotingProgress();
-        updateVotingOpenStatus(true);
+        setTimeout(() => {
+            updateVotingOpenStatus(true);
+        }, 500);
 
         fState.renderSelect="SHOWTOPIC";
         fState.editParam='id';
