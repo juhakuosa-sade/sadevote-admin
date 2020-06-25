@@ -213,19 +213,33 @@ const RunMeeting = () => {
     }
 
     async function updateVotingOpenStatus(state) {
-        //if (topicState.voting_open === state) return;
 
         const topic = makeTopicInput({ ...topicState });
         topic.voting_open = state;
         topic.active = true;
+
         try {
             await API.graphql(graphqlOperation(updateTopic, {input: topic}))
-       //     setTopicState({...topic})
         } catch (error) {
             console.log("error updating voting open status", error);
         }
         setVotingOpen(state);
     }
+
+    async function closeTopic() {
+
+        console.log("Closing topic...")
+        const topic = makeTopicInput({ ...topicState });
+        topic.voting_open = false;
+        topic.active = false;
+        try {
+            await API.graphql(graphqlOperation(updateTopic, {input: topic}))
+        } catch (error) {
+            console.log("error closing topic", error);
+        }
+        setVotingOpen(false);
+    }
+
 
     useEffect(() => 
     { // activate topic
@@ -238,17 +252,13 @@ const RunMeeting = () => {
             try {
                 console.log("Updating topic", topic)
                 await API.graphql(graphqlOperation(updateTopic, {input: topic}))
-           //     setTopicState({...topic})
             } catch (error) {
                 console.log("error updating topic activation status", error);
             }
         };        
         if ((topicState.active === false) && (topicState.id.length>0)) {
             console.log("Activating topic...", topicState.id)
-            setTimeout(() => {
-                console.log("NOW!")
-                updateTopicActivation(true);
-            }, 500);
+            updateTopicActivation(true);
         }
 
         return async () => {  
@@ -261,7 +271,6 @@ const RunMeeting = () => {
     
 
     const handleCloseVoting = (event) => {
-    //    let id = event.target.getAttribute('id');
         updateVotingOpenStatus(false);
         unsubscribeVotingProgress();
 
@@ -271,11 +280,8 @@ const RunMeeting = () => {
     }
 
     const handleOpenVoting = (event) => {
-    //    let id = event.target.getAttribute('id');
         subscribeVotingProgress();
-        setTimeout(() => {
-            updateVotingOpenStatus(true);
-        }, 500);
+        updateVotingOpenStatus(true);
 
         fState.renderSelect="SHOWTOPIC";
         fState.editParam='id';
@@ -283,13 +289,12 @@ const RunMeeting = () => {
     }
 
     const handleNext = (event) => {
-        //let id = event.target.getAttribute('id');
         
         const maxIndex = parseInt(meetingState.topics.length - 1); 
 
         let index = parseInt(topicIndex);
         if (index < maxIndex) {
-            updateVotingOpenStatus(false);
+            closeTopic();
             unsubscribeVotingProgress();
 
             setOptions([]);
@@ -304,11 +309,10 @@ const RunMeeting = () => {
     }
 
     const handlePrev = (event) => {
-        //let id = event.target.getAttribute('id');
         
         let index = parseInt(topicIndex);
         if (index > 0) {
-            updateVotingOpenStatus(false);
+            closeTopic();
             unsubscribeVotingProgress();
 
             setOptions([]);
