@@ -5,7 +5,7 @@ import { API, graphqlOperation } from 'aws-amplify'
 
 import { listTopics, getMeeting, listVotingOptions } from '../graphql/queries'
 import { updateTopic, updateMeeting } from '../graphql/mutations'
-import { onUpdateVotingOption  } from '../graphql/subscriptions'
+import { onCreateVoting  } from '../graphql/subscriptions'
 import { makeTopicInput, makeMeetingInput } from '../gqlutil'
 
 import { getSelectedMeeting } from '../App';
@@ -128,7 +128,7 @@ const RunMeeting = () => {
 
     }, [topicState, options, setOptions, optFetchAllowed])
 
-    const updateVoting = useCallback((updatedOption, options) => {
+    const updateVotingOptionStatus = useCallback((updatedOption, options) => {
         const index = options.findIndex(option => option.id === updatedOption.id);
         const newOptions = [...options];
         newOptions[index] = updatedOption;
@@ -173,16 +173,30 @@ const RunMeeting = () => {
         }
     }, [meetingState]);
 
+    function pickVotingResultStatus(voting) {
+        console.log("searching:", voting.votingOptionId, " in ", options);
+        var opt = options.find(element => element.id === voting.votingOptionId);
+        if (opt) {
+            opt.votes += voting.votes;
+            return opt;
+        } else return null;
+    }
+
     async function subscribeVotingProgress () {
         console.log("subscribing voting progress");
-        
+
         try {
-            const subscription = await API.graphql(graphqlOperation(onUpdateVotingOption)).subscribe({
-            next: resp => {
-                    const votingOption = resp.value.data.onUpdateVotingOption;
-                    console.log("Voting update !!!", votingOption);
-                    updateVoting(votingOption, options);
+            const subscription = await API.graphql(graphqlOperation(onCreateVoting)).subscribe({
+                next: resp => {
+                    const voting = resp.value.data.onCreateVoting;
+                    console.log("Voting update !!!", voting);
+                    const votingOption = pickVotingResultStatus(voting);
+                    if (votingOption != null) {
+                        console.log("Assign vote to votingOption", votingOption);
+                        updateVotingOptionStatus(votingOption, options);
                     }
+                
+                }
             });
             console.log("subscribed:", subscription);
             setSubscribed(true);
@@ -190,9 +204,9 @@ const RunMeeting = () => {
         } catch (error) {
             console.log("subscribing failed:", subscription);
         }
-    
+
         return subscription;
-    };
+        };
 
     async function unsubscribeVotingProgress() {
         if ((subscription) && (subscribed)) {
@@ -204,7 +218,7 @@ const RunMeeting = () => {
     }
 
     function saveResults() {
-        //TODO: Save results DB or local file 
+        //TODO: Save results to DB or local file 
     }
 
     function isMeetingSelected() {
@@ -239,7 +253,6 @@ const RunMeeting = () => {
         }
         setVotingOpen(false);
     }
-
 
     useEffect(() => 
     { // activate topic
