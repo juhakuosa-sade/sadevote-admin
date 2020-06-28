@@ -339,6 +339,26 @@ const RunMeeting = () => {
 
     }
 
+    function getVotingResultString(votes) {
+        var totalVotes = 0;
+        options.forEach(element => {
+            totalVotes += element.votes;
+        });
+        
+        if ((votes === 0) && ( totalVotes === 0)) return ("0")
+
+        const result = parseFloat(100*votes/totalVotes).toFixed(1);
+        const percentageString = " (" + result + "%)";
+        const fillerLength = 17 - (votes.toString().length + percentageString.length); // we want a fixed length string
+        var filler = '';
+        for (let i = 0; i < fillerLength; i++) {
+            filler += ' ';
+        }
+
+        const resultString = votes + filler + percentageString;      
+        return resultString; 
+    }
+
     function resetRenderSelection() {
         const param = fState.editParam;
         fState.renderSelect="SHOWTOPIC";
@@ -404,7 +424,7 @@ const RunMeeting = () => {
                                     <textarea
                                         readOnly={true}
                                         style={styles.votingCount}
-                                        value={option.votes}
+                                        value={getVotingResultString(option.votes)}
                                         placeholder="Voting option"
                                         />
                                 </div>
@@ -448,8 +468,8 @@ const styles = {
     input: { resize:'none', border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 12 },
     inputTitle: { resize:'none',border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 14, fontWeight: 'bold' },
     inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 2, padding: 8, fontSize: 12 },
-    votingText: { resize:'none', width: 300, border: 'none', backgroundColor: 'white', marginBottom: 1, marginRight:1, padding: 8, fontSize: 12 },
-    votingCount: { resize:'none', width: 100, border: 'none', backgroundColor: 'white', marginBottom: 1, padding: 8, fontSize: 12 },
+    votingText: { resize:'none', width: 250, border: 'none', backgroundColor: 'white', marginBottom: 1, marginRight:1, padding: 8, fontSize: 12 },
+    votingCount: { resize:'none', width: 150, border: 'none', backgroundColor: 'white', marginBottom: 1, padding: 8, fontSize: 12 },
     info: { justifyContent: 'center', color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' },
     button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginTop: 8, marginBottom: 8, padding: '12px 0px' },
     buttonLeft: { width: 200, backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginRight: 2, padding: '12px 0px' },
