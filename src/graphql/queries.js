@@ -111,6 +111,7 @@ export const getTopic = /* GraphQL */ `
       topic_text
       voting_options
       voting_options_count
+      voting_open
       active
       voting_percentage
       createdAt
@@ -132,6 +133,7 @@ export const listTopics = /* GraphQL */ `
         topic_text
         voting_options
         voting_options_count
+        voting_open
         active
         voting_percentage
         createdAt
@@ -171,6 +173,37 @@ export const listVotingOptions = /* GraphQL */ `
         option_text
         votes
         changed
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;
+export const getVoting = /* GraphQL */ `
+  query GetVoting($id: ID!) {
+    getVoting(id: $id) {
+      id
+      votingOptionId
+      votes
+      voter
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const listVotings = /* GraphQL */ `
+  query ListVotings(
+    $filter: ModelVotingFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listVotings(filter: $filter, limit: $limit, nextToken: $nextToken) {
+      items {
+        id
+        votingOptionId
+        votes
+        voter
         createdAt
         updatedAt
       }

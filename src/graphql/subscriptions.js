@@ -130,6 +130,7 @@ export const onCreateTopic = /* GraphQL */ `
       topic_text
       voting_options
       voting_options_count
+      voting_open
       active
       voting_percentage
       createdAt
@@ -146,6 +147,7 @@ export const onUpdateTopic = /* GraphQL */ `
       topic_text
       voting_options
       voting_options_count
+      voting_open
       active
       voting_percentage
       createdAt
@@ -162,6 +164,7 @@ export const onDeleteTopic = /* GraphQL */ `
       topic_text
       voting_options
       voting_options_count
+      voting_open
       active
       voting_percentage
       createdAt
@@ -209,6 +212,42 @@ export const onDeleteVotingOption = /* GraphQL */ `
       option_text
       votes
       changed
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onCreateVoting = /* GraphQL */ `
+  subscription OnCreateVoting {
+    onCreateVoting {
+      id
+      votingOptionId
+      votes
+      voter
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onUpdateVoting = /* GraphQL */ `
+  subscription OnUpdateVoting {
+    onUpdateVoting {
+      id
+      votingOptionId
+      votes
+      voter
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const onDeleteVoting = /* GraphQL */ `
+  subscription OnDeleteVoting {
+    onDeleteVoting {
+      id
+      votingOptionId
+      votes
+      voter
       createdAt
       updatedAt
     }

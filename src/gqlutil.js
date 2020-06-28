@@ -17,8 +17,10 @@ export function makeTopicInput(tpc) {
         topic_number: tpc.topic_number,
         topic_title: tpc.topic_title,
         topic_text: tpc.topic_text,
-        voting_options: [...tpc.voting_options],
+    //    voting_options: [...tpc.voting_options],
+        voting_options: tpc.voting_options,
         voting_options_count: tpc.voting_options_count,
+        voting_open: tpc.voting_open,
         active: tpc.active,
         voting_percentage: tpc.voting_percentage,
     }

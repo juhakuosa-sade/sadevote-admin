@@ -160,6 +160,7 @@ export const createTopic = /* GraphQL */ `
       topic_text
       voting_options
       voting_options_count
+      voting_open
       active
       voting_percentage
       createdAt
@@ -179,6 +180,7 @@ export const updateTopic = /* GraphQL */ `
       topic_text
       voting_options
       voting_options_count
+      voting_open
       active
       voting_percentage
       createdAt
@@ -198,6 +200,7 @@ export const deleteTopic = /* GraphQL */ `
       topic_text
       voting_options
       voting_options_count
+      voting_open
       active
       voting_percentage
       createdAt
@@ -254,6 +257,51 @@ export const deleteVotingOption = /* GraphQL */ `
       option_text
       votes
       changed
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const createVoting = /* GraphQL */ `
+  mutation CreateVoting(
+    $input: CreateVotingInput!
+    $condition: ModelVotingConditionInput
+  ) {
+    createVoting(input: $input, condition: $condition) {
+      id
+      votingOptionId
+      votes
+      voter
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const updateVoting = /* GraphQL */ `
+  mutation UpdateVoting(
+    $input: UpdateVotingInput!
+    $condition: ModelVotingConditionInput
+  ) {
+    updateVoting(input: $input, condition: $condition) {
+      id
+      votingOptionId
+      votes
+      voter
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const deleteVoting = /* GraphQL */ `
+  mutation DeleteVoting(
+    $input: DeleteVotingInput!
+    $condition: ModelVotingConditionInput
+  ) {
+    deleteVoting(input: $input, condition: $condition) {
+      id
+      votingOptionId
+      votes
+      voter
       createdAt
       updatedAt
     }

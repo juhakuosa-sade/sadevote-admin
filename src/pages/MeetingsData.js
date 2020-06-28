@@ -59,7 +59,7 @@ const MeetingData = ({itemId, updateMeetingsList}) => {
             preFillForm(itemId);
         }
     }, [itemId, meetings, usePrefill]);
- 
+
     function restoreState() {
         setUsePrefill(true);
         setUseUpdate(false);
