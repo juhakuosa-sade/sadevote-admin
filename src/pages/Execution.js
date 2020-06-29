@@ -1,12 +1,12 @@
-import React, { useEffect, useCallback, useState } from 'react'
+import React, { useEffect, useCallback, useState, useRef } from 'react'
 import '../App.css';
 
 import { API, graphqlOperation } from 'aws-amplify'
 
-import { listTopics, getMeeting, listVotingOptions } from '../graphql/queries'
-import { updateTopic, updateMeeting } from '../graphql/mutations'
+import { getMeeting, listTopics, listVotingOptions } from '../graphql/queries'
+import { updateMeeting, updateTopic, updateVotingOption } from '../graphql/mutations'
 import { onCreateVoting  } from '../graphql/subscriptions'
-import { makeTopicInput, makeMeetingInput } from '../gqlutil'
+import { makeTopicInput, makeMeetingInput, makeVotingOptionInput } from '../gqlutil'
 
 import { getSelectedMeeting } from '../App';
 import { meetingInitialState } from'./MeetingsData';
@@ -22,7 +22,8 @@ const initState = {
 
 const RunMeeting = () => {
 
-    const fState = initState ;
+    const fState = initState;
+    const meetingClosing = useRef(false);
 
     const [isLoading, setIsLoading] = useState(false);
     const [meetingState, setMeetingState] = useState();
@@ -75,10 +76,8 @@ const RunMeeting = () => {
         if (mtgFetchAllowed) {
             setMtgFetchAllowed(false);
             fetchMeetingAndTopics(selectedMeeting.id); //fetch meeting and topics
-        }        
-        return () => {
-           saveResults();
-        }
+        }    
+        
     }, [selectedMeeting.id, topicIndex, mtgFetchAllowed])
 
     useEffect(() => 
@@ -169,6 +168,7 @@ const RunMeeting = () => {
             if (meetingState) {
                 console.log("in clean-up: deactivating meeting")
                 updateMeetingActivation(false)
+                meetingClosing.current = true;
             }
         }
     }, [meetingState]);
@@ -217,10 +217,6 @@ const RunMeeting = () => {
         }
     }
 
-    function saveResults() {
-        //TODO: Save results to DB or local file 
-    }
-
     function isMeetingSelected() {
         if ((selectedMeeting)&&(selectedMeeting.id.length>0)) return true;
         return false;
@@ -241,7 +237,6 @@ const RunMeeting = () => {
     }
 
     async function closeTopic() {
-
         console.log("Closing topic...")
         const topic = makeTopicInput({ ...topicState });
         topic.voting_open = false;
@@ -252,7 +247,30 @@ const RunMeeting = () => {
             console.log("error closing topic", error);
         }
         setVotingOpen(false);
+        saveVotingResults(options);
+    } 
+
+    const saveVotingResults = (options) => {
+        console.log("Saving results...");
+        options.forEach(element => {
+            try {     
+                const opt = makeVotingOptionInput({ ...element });
+                API.graphql(graphqlOperation(updateVotingOption, {input: opt}));
+            } catch (err) {
+                console.log('error updating voting option data:', err);
+            }      
+        });   
     }
+
+    useEffect(() => {
+        return () => {
+            if (meetingClosing.current) {
+                console.log("in clean-up: handling results")
+                saveVotingResults(options)
+            }
+        }
+    }, [options, meetingClosing]);
+
 
     useEffect(() => 
     { // activate topic
@@ -260,7 +278,9 @@ const RunMeeting = () => {
         const updateTopicActivation = async (state) => {
             
             const topic = makeTopicInput({ ...topicState });
-
+            if (state === false) {
+                topic.voting_open = false;
+            }
             topic.active = state;
             try {
                 console.log("Updating topic", topic)
@@ -274,18 +294,18 @@ const RunMeeting = () => {
             updateTopicActivation(true);
         }
 
-        return async () => {  
+        return () => {  
             if (topicState.id.length>0) {
                 console.log("in clean-up: deactivating topic")
                 updateTopicActivation(false)
             }
         }
-    }, [topicState])
-    
-
+    }, [topicState]);
+ 
     const handleCloseVoting = (event) => {
         updateVotingOpenStatus(false);
         unsubscribeVotingProgress();
+        saveVotingResults(options);
 
         fState.renderSelect="SHOWTOPIC";
         fState.editParam='id';
@@ -337,6 +357,26 @@ const RunMeeting = () => {
         fState.renderSelect="SHOWTOPIC";
         fState.editParam='id';
 
+    }
+
+    function getVotingResultString(votes) {
+        var totalVotes = 0;
+        options.forEach(element => {
+            totalVotes += element.votes;
+        });
+        
+        if ((votes === 0) && ( totalVotes === 0)) return ("0")
+
+        const result = parseFloat(100*votes/totalVotes).toFixed(1);
+        const percentageString = " (" + result + "%)";
+        const fillerLength = 17 - (votes.toString().length + percentageString.length); // we want a fixed length string
+        var filler = '';
+        for (let i = 0; i < fillerLength; i++) {
+            filler += ' ';
+        }
+
+        const resultString = votes + filler + percentageString;      
+        return resultString; 
     }
 
     function resetRenderSelection() {
@@ -404,7 +444,7 @@ const RunMeeting = () => {
                                     <textarea
                                         readOnly={true}
                                         style={styles.votingCount}
-                                        value={option.votes}
+                                        value={getVotingResultString(option.votes)}
                                         placeholder="Voting option"
                                         />
                                 </div>
@@ -448,8 +488,8 @@ const styles = {
     input: { resize:'none', border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 12 },
     inputTitle: { resize:'none',border: 'none', backgroundColor: 'white', marginBottom: 2, padding: 8, fontSize: 14, fontWeight: 'bold' },
     inputDisabled: { color: 'grey', border: 'none', backgroundColor: '#bbb', marginBottom: 2, padding: 8, fontSize: 12 },
-    votingText: { resize:'none', width: 300, border: 'none', backgroundColor: 'white', marginBottom: 1, marginRight:1, padding: 8, fontSize: 12 },
-    votingCount: { resize:'none', width: 100, border: 'none', backgroundColor: 'white', marginBottom: 1, padding: 8, fontSize: 12 },
+    votingText: { resize:'none', width: 250, border: 'none', backgroundColor: 'white', marginBottom: 1, marginRight:1, padding: 8, fontSize: 12 },
+    votingCount: { resize:'none', width: 150, border: 'none', backgroundColor: 'white', marginBottom: 1, padding: 8, fontSize: 12 },
     info: { justifyContent: 'center', color: 'white', outline: 'none', fontSize: 12, padding: '4px 4px' },
     button: { backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginTop: 8, marginBottom: 8, padding: '12px 0px' },
     buttonLeft: { width: 200, backgroundColor: 'black', color: 'white', outline: 'none', fontSize: 12, marginRight: 2, padding: '12px 0px' },
