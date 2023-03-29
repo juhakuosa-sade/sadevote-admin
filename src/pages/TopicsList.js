@@ -66,10 +66,13 @@ const TopicsList = () => {
 
             const topicData = await API.graphql(graphqlOperation(listTopics, {limit: DYNAMO_QUERY_MAX}))
             const topics = topicData.data.listTopics.items
+            topics.sort(function(a,b){
+                return parseInt(a.topic_number) - parseInt(b.topic_number);
+                })
 
             var filteredTopics = [...''];
-            topicIdList.forEach(element => {
-                topics.forEach(topic => {
+            topics.forEach(topic => {
+                topicIdList.forEach(element => {
                     if (element === topic.id) {
                         filteredTopics = [...filteredTopics, topic]
                     }
