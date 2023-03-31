@@ -5,8 +5,7 @@ import { BrowserRouter } from "react-router-dom";
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-import { Amplify } from 'aws-amplify'
-//import { PubSub } from '@aws-amplify/pubsub';
+import { Amplify, PubSub } from 'aws-amplify'
 
 //import awsExports from "./aws-exports";
 /* 
@@ -30,31 +29,14 @@ const awsExports = {
   "aws_user_pools_id": "eu-west-1_fUueFwy5j",
   "aws_user_pools_web_client_id": "6ke2ro39et5if62h2seh4h61vj",
   "oauth": {},
-
-  /*
-  "aws_dynamodb_all_tables_region": "eu-west-1",
-  "aws_dynamodb_table_schemas": [
-      {
-          "tableName": "dynamovoter-test",
-          "region": "eu-west-1"
-      }
-  ],
-  "aws_cloud_logic_custom": [
-      {
-          "name": "sadevoterestapi",
-          "endpoint": "https://o95m3dpvc1.execute-api.eu-west-1.amazonaws.com/test",
-          "region": "eu-west-1"
-      }
-  ],*/
   
 };
 
 Amplify.configure(awsExports);
-//PubSub.configure(awsExports);
+PubSub.configure(awsExports);
 
 
 /*
-
 // optional configuration
 const styles = {
     dialogViewStyle: { height: 300, color: 'black', backgroundColor:'white', display: 'flex', flexDirection: 'column', },

@@ -8,7 +8,7 @@ import { API, graphqlOperation } from 'aws-amplify'
 
 import { listMeetings } from '../graphql/queries'
 import MeetingData from './MeetingsData';
-import { confirmAction, setSelectedMeeting } from '../App';
+import { confirmDelete, setSelectedMeeting } from '../App';
 import { deleteMeeting } from '../graphql/mutations'
 
 const DYNAMO_QUERY_MAX = 1000;
@@ -105,7 +105,7 @@ const MeetingsList = ({cbfn}) => {
         const id = event.target.getAttribute('id');
         const name = event.target.getAttribute('name');
 
-        if (await confirmAction(name)) {
+        if (await confirmDelete(name)) {
             if (await delMeeting(id)) {
                 fState.renderSelect="DELETE";
                 fState.editParam=id;
