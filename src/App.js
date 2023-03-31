@@ -89,7 +89,15 @@ export function setSelectedMeeting(id, name, description) {
 export function getSelectedMeeting() {
     return selectedMeeting;
 }
-  
+export function clearSelectedMeeting() {
+    selectedMeeting.id="";
+    selectedMeeting.name="";
+    selectedMeeting.description="";
+    selectedMeeting.selected=false;
+
+    console.log("SELECTED MTG", selectedMeeting.id, selectedMeeting.name, selectedMeeting.description);
+}
+
 /**
  * Class App
  * - Main router page
@@ -170,6 +178,7 @@ class App extends Component {
         if (await confirmAction("stop the meeting")) {
             this.disableContentButtons()
             this.setMeetingRunning(false)
+            clearSelectedMeeting()
             this.goPage(pageHome)
             }
     }
