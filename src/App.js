@@ -26,7 +26,7 @@ export function generateId() {
     return uuidv4();
 }
 
-export function confirmAction(row1) {
+export function confirmDelete(row1) {
     return new Promise(function (resolve) {
         confirmAlert({
             title: "You are about to delete " + row1,
@@ -40,6 +40,24 @@ export function confirmAction(row1) {
                 label: 'No',
                 onClick: () => { resolve(false) }
             }
+            ]
+        });
+    });
+}
+export function confirmAction(row1) {
+    return new Promise(function (resolve) {
+        confirmAlert({
+            title: "You are about to " + row1,
+            message: "Are you sure?",
+            buttons: [
+                {
+                    label: 'Yes',
+                    onClick: () => { resolve(true) }
+                },
+                {
+                    label: 'No',
+                    onClick: () => { resolve(false) }
+                }
             ]
         });
     });
@@ -83,7 +101,8 @@ class App extends Component {
         this.state = {
             toPage: pageHome,
             showWait: false,
-            contentButtonsDisabled: true 
+            contentButtonsDisabled: true,
+            meetingRunning: false
         }
 
         this.goPage = this.goPage.bind(this);
@@ -92,15 +111,24 @@ class App extends Component {
         this.goTopics = this.goTopics.bind(this);
         this.goUsers = this.goUsers.bind(this);
         this.goRun = this.goRun.bind(this);
+        this.goStop = this.goStop.bind(this);
         this.goTodos = this.goTodos.bind(this);
 
         this.enableContentButtons = this.enableContentButtons.bind(this);
+        this.disableContentButtons = this.disableContentButtons.bind(this);
         this.meetingSelected = this.meetingSelected.bind(this);
+        this.setMeetingRunning = this.setMeetingRunning.bind(this);
 
     }
 
     enableContentButtons() {
         this.setState({ contentButtonsDisabled: false });
+    }
+    disableContentButtons() {
+        this.setState({ contentButtonsDisabled: true });
+    }
+    setMeetingRunning(running) {
+        this.setState({ meetingRunning: running });
     }
 
     meetingSelected() {
@@ -133,9 +161,18 @@ class App extends Component {
     }
  
     goRun() {
+        this.disableContentButtons()
+        this.setMeetingRunning(true)
         this.goPage(pageRun)
     }
 
+   async goStop() {
+        if (await confirmAction("stop the meeting")) {
+            this.disableContentButtons()
+            this.setMeetingRunning(false)
+            this.goPage(pageHome)
+            }
+    }
     goTodos() {
         this.goPage(pageTodos)
     }
@@ -153,27 +190,34 @@ class App extends Component {
                 </header>
                 <div className="App-body">
                     <div style={styles.navcontainer}>
-                        <button style={styles.button} onClick={this.goHome}>Home</button>
+                        <button style={styles.button}
+                                hidden = {!this.state.meetingRunning}
+                                onClick={this.goStop}>Stop meeting</button>
+                        <button style={styles.button}
+                                hidden = {this.state.meetingRunning}
+                                onClick={this.goHome}>Home</button>
                         <hr/>
-                        <button style={styles.button} onClick={this.goMeetings}>Meetings</button> 
+                        <button style={styles.button}
+                                hidden = {this.state.meetingRunning}
+                                onClick={this.goMeetings}>Meetings</button>
                         <hr/>
-                        <button style={styles.button} 
+                        <button style={styles.button}
                                 hidden = {this.state.contentButtonsDisabled}
                                 onClick={this.goTopics}>Topics</button>
-                        <button style={styles.button} 
-                                hidden = {this.state.contentButtonsDisabled} 
+                        <button style={styles.button}
+                                hidden = {this.state.contentButtonsDisabled}
                                 onClick={this.goUsers}>Users</button>
-                        <button style={styles.button} 
-                                hidden={true} 
+                        <button style={styles.button}
+                                hidden={true}
                                 onClick={this.goTodos}>Todos</button>
                         <hr/>
-                        <button style={styles.button} 
-                                hidden = {this.state.contentButtonsDisabled} 
-                                onClick={this.goRun}>Run</button>  
+                        <button style={styles.button}
+                                hidden = {this.state.contentButtonsDisabled}
+                                onClick={this.goRun}>Run</button>
                         <hr/>
-                        <button style={styles.button} onClick={() => signOut()}>Sign out</button>  
+                        <button style={styles.button} onClick={() => signOut()}>Sign out</button>
                         <p/>
-                    </div>  
+                    </div>
                     <div style={styles.container}>
                         <div style={styles.status}>
                             { 
