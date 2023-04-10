@@ -15,7 +15,7 @@
     "@testing-library/user-event": "^7.2.1",
     "aws-amplify": "^5.0.22",
     "aws-amplify-react": "^4.1.7",
-    "aws-sdk": "^2.663.0",
+    "aws-sdk": "^2.1354.0",
     "react": "^16.13.1",
     "react-alert": "^7.0.1",
     "react-alert-template-basic": "^1.0.0",
